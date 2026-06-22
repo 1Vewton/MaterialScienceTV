@@ -7,28 +7,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Goto Backend
-      run: cd backend
 
     - name: Checkout code
       uses: actions/checkout@v4
 
     - name: Set up Go
+      working-directory: backend
       uses: actions/setup-go@v5
       with:
         go-version-file: go.mod
 
     - name: Download dependencies
+      working-directory: backend
       run: go mod download
 
     - name: Run tests 
+      working-directory: backend
       run: go test -v ./... -tags test
     
     - name: Go Vet
+      working-directory: backend
       run: go vet ./...
     
     - name: Install Golint
+      working-directory: backend
       run: go install golang.org/x/lint/golint@latest
       
     - name: Run Golint
+      working-directory: backend
       run: golint -set_exit_status ./...
