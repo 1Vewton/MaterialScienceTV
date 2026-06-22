@@ -12,10 +12,9 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Set up Go
-      working-directory: backend
       uses: actions/setup-go@v5
       with:
-        go-version-file: go.mod
+        go-version-file: backend/go.mod
 
     - name: Download dependencies
       working-directory: backend
