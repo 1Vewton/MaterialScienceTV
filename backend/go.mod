@@ -2,6 +2,8 @@ module github.com/1Vewton/MaterialScienceTV/backend
 
 go 1.25.0
 
+require gorm.io/gorm v1.31.1
+
 require (
 	github.com/99designs/gqlgen v0.17.92 // indirect
 	github.com/agnivade/levenshtein v1.2.1 // indirect
@@ -16,7 +18,6 @@ require (
 	golang.org/x/sync v0.21.0 // indirect
 	golang.org/x/text v0.38.0 // indirect
 	golang.org/x/tools v0.46.0 // indirect
-	gorm.io/gorm v1.31.1 // indirect
 )
 
 tool github.com/99designs/gqlgen
