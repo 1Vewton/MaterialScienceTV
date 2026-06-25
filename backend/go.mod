@@ -2,7 +2,10 @@ module github.com/1Vewton/MaterialScienceTV/backend
 
 go 1.25.0
 
-require gorm.io/gorm v1.31.1
+require (
+	github.com/joho/godotenv v1.5.1
+	gorm.io/gorm v1.31.1
+)
 
 require (
 	github.com/99designs/gqlgen v0.17.92 // indirect
