@@ -1,10 +1,13 @@
 package database
 
-// DatabaseType defines the type of databse connected
-type DatabaseType int
+// DBType defines the type of databse connected
+type DBType int
 
 const (
-	Sqlite     DatabaseType = iota //0
-	MySQL                          // 1
-	PostgreSQL                     // 2
+	// Sqlite driver
+	Sqlite DBType = iota //0
+	// MySQL driver
+	MySQL // 1
+	// PostgreSQL driver
+	PostgreSQL // 2
 )

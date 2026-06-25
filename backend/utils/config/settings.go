@@ -7,5 +7,5 @@ import (
 // Settings struct include the basic settings.
 type Settings struct {
 	databaseURL  *string
-	databaseType *database.DatabaseType
+	databaseType *database.DBType
 }
