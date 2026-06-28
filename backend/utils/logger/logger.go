@@ -40,6 +40,12 @@ func (logger *Logger) Info(
 			logger.loggerName,
 			message,
 		)
+	} else {
+		fmt.Printf(
+			"[INFO]%s: %s",
+			logger.loggerName,
+			message,
+		)
 	}
 }
 
@@ -57,6 +63,12 @@ func (logger *Logger) Error(
 		)
 	} else if logger.testLogger != nil {
 		(*logger.testLogger).Logf(
+			"[ERROR]%s: %s",
+			logger.loggerName,
+			message,
+		)
+	} else {
+		fmt.Printf(
 			"[ERROR]%s: %s",
 			logger.loggerName,
 			message,

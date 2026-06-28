@@ -4,8 +4,17 @@ import (
 	"github.com/1Vewton/MaterialScienceTV/backend/database"
 )
 
-// Settings struct include the basic settings.
+// config struct include the basic settings.
 type config struct {
 	databaseURL  *string
 	databaseType *database.DBType
+}
+
+// GetDatabaseURL method returns the database url to connect
+func (cfg *config) GetDatabaseURL() string {
+	return SetConfigString(
+		"DATABASE_URL",
+		":memory:",
+		&cfg.databaseURL,
+	)
 }
