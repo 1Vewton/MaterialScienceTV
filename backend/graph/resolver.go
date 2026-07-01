@@ -5,5 +5,5 @@ package graph
 // It serves as dependency injection for your app, add any dependencies you require
 // here.
 
-// Resolver: Dependency injection
+// Resolver Dependency injection of the app
 type Resolver struct{}
