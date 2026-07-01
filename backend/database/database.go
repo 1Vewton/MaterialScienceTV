@@ -26,6 +26,7 @@ func init() {
 // InitDataBase Initialize the database
 func InitDataBase() error {
 	var err error
+	// Initialize the database connection
 	switch config.Config.GetDatabaseType() {
 	case databasetype.Sqlite:
 		databaseLogger.Info("Use Sqlite")
@@ -48,6 +49,12 @@ func InitDataBase() error {
 	default:
 		return errors.New("Database type not support")
 	}
+	if err != nil {
+		databaseLogger.Error(err.Error())
+		return err
+	}
+	// Automigrate the data
+	err = DataBase.AutoMigrate(&User{})
 	if err != nil {
 		databaseLogger.Error(err.Error())
 		return err
