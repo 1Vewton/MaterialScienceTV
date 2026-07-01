@@ -18,3 +18,12 @@ func (cfg *config) GetDatabaseURL() string {
 		&cfg.databaseURL,
 	)
 }
+
+// GetDatabaseType method returns the database url to connect
+func (cfg *config) GetDatabaseType() database.DBType {
+	return SetConfigDBType(
+		"DATABASE_URL",
+		database.Sqlite,
+		&cfg.databaseType,
+	)
+}

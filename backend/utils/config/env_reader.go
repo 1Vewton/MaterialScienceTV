@@ -2,6 +2,9 @@ package config
 
 import (
 	"os"
+	"strconv"
+
+	"github.com/1Vewton/MaterialScienceTV/backend/database"
 )
 
 // GetEnvString returns the string value stored in the environment
@@ -14,4 +17,21 @@ func GetEnvString(
 		return &defaultValue
 	}
 	return &result
+}
+
+// GetEnvDatabaseType returns the database type value stored in the environment
+func GetEnvDatabaseType(
+	key string,
+	defaultValue database.DBType,
+) *database.DBType {
+	result := os.Getenv(key)
+	if result == "" {
+		return &defaultValue
+	}
+	num, err := strconv.Atoi(result)
+	if err != nil {
+		panic(err.Error())
+	}
+	databaseTypeEnum := database.DBType(num)
+	return &databaseTypeEnum
 }
