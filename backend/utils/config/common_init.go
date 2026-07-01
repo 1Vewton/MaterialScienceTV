@@ -5,7 +5,7 @@ import (
 )
 
 // Config stores the configuration of this program.
-var Config *config
+var Config *config = &config{}
 var configLogger *logger.Logger = logger.NewLogger(
 	"config",
 	nil,

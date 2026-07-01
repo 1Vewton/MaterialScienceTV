@@ -3,7 +3,7 @@ package config
 import (
 	"testing"
 
-	"github.com/1Vewton/MaterialScienceTV/backend/database"
+	"github.com/1Vewton/MaterialScienceTV/backend/database/databasetype"
 )
 
 // Test the env reading of string var
@@ -33,20 +33,20 @@ func TestEnvSettingString(t *testing.T) {
 func TestEnvReadingDBType(t *testing.T) {
 	res := GetEnvDatabaseType(
 		"DATABASE_TYPE",
-		database.Sqlite,
+		databasetype.Sqlite,
 	)
-	if *res != database.Sqlite {
+	if *res != databasetype.Sqlite {
 		t.Errorf(
 			"Expected %d, got %d",
-			database.Sqlite,
+			databasetype.Sqlite,
 			*res,
 		)
 	}
 	t.Setenv("DATABASE_TYPE", "0")
-	if *res != database.Sqlite {
+	if *res != databasetype.Sqlite {
 		t.Errorf(
 			"Expected %d, got %d",
-			database.Sqlite,
+			databasetype.Sqlite,
 			*res,
 		)
 	}
@@ -57,10 +57,10 @@ func TestEnvSettingDatabaseType(t *testing.T) {
 	var tSetting *config = &config{}
 	t.Setenv("DATABASE_TYPE", "0")
 	res := tSetting.GetDatabaseType()
-	if res != database.Sqlite {
+	if res != databasetype.Sqlite {
 		t.Errorf(
 			"Expected %d, got %d",
-			database.Sqlite,
+			databasetype.Sqlite,
 			res,
 		)
 	}

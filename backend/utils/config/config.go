@@ -1,13 +1,13 @@
 package config
 
 import (
-	"github.com/1Vewton/MaterialScienceTV/backend/database"
+	"github.com/1Vewton/MaterialScienceTV/backend/database/databasetype"
 )
 
 // config struct include the basic settings.
 type config struct {
 	databaseURL  *string
-	databaseType *database.DBType
+	databaseType *databasetype.DBType
 }
 
 // GetDatabaseURL method returns the database url to connect
@@ -20,10 +20,10 @@ func (cfg *config) GetDatabaseURL() string {
 }
 
 // GetDatabaseType method returns the database url to connect
-func (cfg *config) GetDatabaseType() database.DBType {
+func (cfg *config) GetDatabaseType() databasetype.DBType {
 	return SetConfigDBType(
-		"DATABASE_URL",
-		database.Sqlite,
+		"DATABASE_TYPE",
+		databasetype.Sqlite,
 		&cfg.databaseType,
 	)
 }

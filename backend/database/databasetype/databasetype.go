@@ -1,4 +1,4 @@
-package database
+package databasetype
 
 // DBType defines the type of databse connected
 type DBType int
