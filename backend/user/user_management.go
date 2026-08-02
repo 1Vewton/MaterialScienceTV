@@ -1,7 +1,7 @@
 package user
 
-// UserTmp struct provides the user datamodel for temporarily storing in redis
-type UserTmp struct {
+// TmpUser struct provides the user datamodel for temporarily storing in redis
+type TmpUser struct {
 	UserID       string
 	UserName     string
 	Password     string
