@@ -6,6 +6,7 @@ import (
 
 // config struct include the basic settings.
 type config struct {
+	serverPort   *string
 	databaseURL  *string
 	databaseType *databasetype.DBType
 }
@@ -25,5 +26,14 @@ func (cfg *config) GetDatabaseType() databasetype.DBType {
 		"DATABASE_TYPE",
 		databasetype.Sqlite,
 		&cfg.databaseType,
+	)
+}
+
+// GetServerPort gets the port the server is running
+func (cfg *config) GetServerPort() string {
+	return SetConfigString(
+		"SERVER_PORT",
+		"8080",
+		&cfg.serverPort,
 	)
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/1Vewton/MaterialScienceTV/backend/database"
 	"github.com/1Vewton/MaterialScienceTV/backend/graph"
+	"github.com/1Vewton/MaterialScienceTV/backend/utils/config"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/lru"
@@ -15,7 +16,7 @@ import (
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
-const defaultPort = "8080"
+var defaultPort = config.Config.GetServerPort()
 
 func init() {
 	err := database.InitDataBase()

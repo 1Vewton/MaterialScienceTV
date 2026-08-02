@@ -10,17 +10,26 @@ type NewTodo struct {
 	UserID string `json:"userId"`
 }
 
+type NewUser struct {
+	UserName string `json:"userName"`
+	Password string `json:"password"`
+	Email    string `json:"email"`
+}
+
 type Query struct {
 }
 
 type Todo struct {
-	ID   string `json:"id"`
-	Text string `json:"text"`
-	Done bool   `json:"done"`
-	User *User  `json:"user"`
+	ID      string `json:"id"`
+	Text    string `json:"text"`
+	Done    bool   `json:"done"`
+	OwnerID string `json:"ownerID"`
 }
 
 type User struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	UserID       string `json:"userID"`
+	UserName     string `json:"userName"`
+	Password     string `json:"password"`
+	Email        string `json:"email"`
+	RegisteredAt string `json:"registeredAt"`
 }
