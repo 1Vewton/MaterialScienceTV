@@ -39,3 +39,25 @@ func SetConfigDBType(
 	}
 	return **field
 }
+
+// SetConfigInteger set the config or return value in integer field directly
+func SetConfigInteger(
+	key string,
+	defaultValue int,
+	field **int,
+) (int, error) {
+	if field == nil {
+		panic("You cannot give a nil pointer to field in SetConfigDBType!")
+	}
+	if *field == nil {
+		num, err := GetEnvInteger(
+			key,
+			defaultValue,
+		)
+		if err != nil {
+			return defaultValue, err
+		}
+		*field = num
+	}
+	return **field, nil
+}

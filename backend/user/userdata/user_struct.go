@@ -1,4 +1,4 @@
-package database
+package userdata
 
 import (
 	"time"

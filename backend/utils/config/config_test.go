@@ -30,6 +30,7 @@ func TestEnvSettingString(t *testing.T) {
 	}
 }
 
+// Test the env reading of DBType
 func TestEnvReadingDBType(t *testing.T) {
 	res := GetEnvDatabaseType(
 		"DATABASE_TYPE",
@@ -42,11 +43,15 @@ func TestEnvReadingDBType(t *testing.T) {
 			*res,
 		)
 	}
-	t.Setenv("DATABASE_TYPE", "0")
-	if *res != databasetype.Sqlite {
+	t.Setenv("DATABASE_TYPE", "1")
+	res = GetEnvDatabaseType(
+		"DATABASE_TYPE",
+		databasetype.Sqlite,
+	)
+	if *res != databasetype.MySQL {
 		t.Errorf(
 			"Expected %d, got %d",
-			databasetype.Sqlite,
+			databasetype.MySQL,
 			*res,
 		)
 	}
@@ -62,6 +67,40 @@ func TestEnvSettingDatabaseType(t *testing.T) {
 			"Expected %d, got %d",
 			databasetype.Sqlite,
 			res,
+		)
+	}
+}
+
+// Test the env reading of integer
+func TestEnvReadingInteger(t *testing.T) {
+	// Get the env key for integer
+	res, errIni := GetEnvInteger(
+		"TEST_INT",
+		0,
+	)
+	if errIni != nil {
+		t.Error(errIni.Error())
+	}
+	if *res != 0 {
+		t.Errorf(
+			"Expected %d, got %d",
+			0,
+			*res,
+		)
+	}
+	t.Setenv("TEST_INT", "1")
+	res, errIni = GetEnvInteger(
+		"TEST_INT",
+		0,
+	)
+	if errIni != nil {
+		t.Error(errIni.Error())
+	}
+	if *res != 1 {
+		t.Errorf(
+			"Expected %d, got %d",
+			1,
+			*res,
 		)
 	}
 }

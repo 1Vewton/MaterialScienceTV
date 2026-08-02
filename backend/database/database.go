@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/1Vewton/MaterialScienceTV/backend/database/databasetype"
+	"github.com/1Vewton/MaterialScienceTV/backend/user/userdata"
 	"github.com/1Vewton/MaterialScienceTV/backend/utils/config"
 	"github.com/1Vewton/MaterialScienceTV/backend/utils/logger"
 	"github.com/glebarez/sqlite"
@@ -54,7 +55,7 @@ func InitDataBase() error {
 		return err
 	}
 	// Automigrate the data
-	err = DataBase.AutoMigrate(&User{})
+	err = DataBase.AutoMigrate(&userdata.User{})
 	if err != nil {
 		databaseLogger.Error(err.Error())
 		return err

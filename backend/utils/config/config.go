@@ -6,9 +6,11 @@ import (
 
 // config struct include the basic settings.
 type config struct {
-	serverPort   *string
-	databaseURL  *string
-	databaseType *databasetype.DBType
+	serverPort    *string
+	databaseURL   *string
+	redisURL      *string
+	redisPassword *string
+	databaseType  *databasetype.DBType
 }
 
 // GetDatabaseURL method returns the database url to connect
@@ -35,5 +37,23 @@ func (cfg *config) GetServerPort() string {
 		"SERVER_PORT",
 		"8080",
 		&cfg.serverPort,
+	)
+}
+
+// GetRedisURL gets the url for the Redis
+func (cfg *config) GetRedisURL() string {
+	return SetConfigString(
+		"REDIS_URL",
+		"localhost:6379",
+		&cfg.redisURL,
+	)
+}
+
+// GetRedisPassword gets the url for the Redis
+func (cfg *config) GetRedisPassword() string {
+	return SetConfigString(
+		"REDIS_PASSWORD",
+		"",
+		&cfg.redisPassword,
 	)
 }

@@ -19,6 +19,19 @@ func GetEnvString(
 	return &result
 }
 
+// GetEnvInteger returns the string value stored in the environment
+func GetEnvInteger(
+	key string,
+	defaultValue int,
+) (*int, error) {
+	result := os.Getenv(key)
+	if result == "" {
+		return &defaultValue, nil
+	}
+	num, err := strconv.Atoi(result)
+	return &num, err
+}
+
 // GetEnvDatabaseType returns the database type value stored in the environment
 func GetEnvDatabaseType(
 	key string,
