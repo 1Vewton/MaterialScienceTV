@@ -6,11 +6,17 @@ import (
 
 // config struct include the basic settings.
 type config struct {
-	serverPort    *string
-	databaseURL   *string
-	redisURL      *string
-	redisPassword *string
-	databaseType  *databasetype.DBType
+	serverPort           *string
+	databaseURL          *string
+	redisURL             *string
+	redisPassword        *string
+	redisDialTimeout     *int
+	redisReadTimeout     *int
+	redisWriteTimeout    *int
+	redisMaxRetries      *int
+	redisMinRetryBackoff *int
+	redisMaxRetryBackoff *int
+	databaseType         *databasetype.DBType
 }
 
 // GetDatabaseURL method returns the database url to connect
@@ -55,5 +61,59 @@ func (cfg *config) GetRedisPassword() string {
 		"REDIS_PASSWORD",
 		"",
 		&cfg.redisPassword,
+	)
+}
+
+// GetRedisDialTimeout gets the Dial Timeout for the Redis
+func (cfg *config) GetRedisDialTimeout() (int, error) {
+	return SetConfigInteger(
+		"REDIS_DIAL_TIMEOUT",
+		10,
+		&cfg.redisDialTimeout,
+	)
+}
+
+// GetRedisReadTimeout gets the Read Timeout for the Redis
+func (cfg *config) GetRedisReadTimeout() (int, error) {
+	return SetConfigInteger(
+		"REDIS_READ_TIMEOUT",
+		5,
+		&cfg.redisReadTimeout,
+	)
+}
+
+// GetRedisWriteTimeout gets the Write Timeout for the Redis
+func (cfg *config) GetRedisWriteTimeout() (int, error) {
+	return SetConfigInteger(
+		"REDIS_WRITE_TIMEOUT",
+		5,
+		&cfg.redisWriteTimeout,
+	)
+}
+
+// GetRedisMaxRetries gets the max retries for the Redis
+func (cfg *config) GetRedisMaxRetries() (int, error) {
+	return SetConfigInteger(
+		"REDIS_MAX_RETRIES",
+		5,
+		&cfg.redisMaxRetries,
+	)
+}
+
+// GetRedisMaxRetryBackOff gets the max retry backoff for the Redis
+func (cfg *config) GetRedisMaxRetryBackOff() (int, error) {
+	return SetConfigInteger(
+		"REDIS_MAX_RETRY_BACKOFF",
+		100,
+		&cfg.redisMaxRetryBackoff,
+	)
+}
+
+// GetRedisMinRetryBackOff gets the min retry backoff for the Redis
+func (cfg *config) GetRedisMinRetryBackOff() (int, error) {
+	return SetConfigInteger(
+		"REDIS_MIN_RETRY_BACKOFF",
+		10,
+		&cfg.redisMinRetryBackoff,
 	)
 }

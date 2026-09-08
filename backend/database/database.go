@@ -5,7 +5,6 @@ import (
 
 	"github.com/1Vewton/MaterialScienceTV/backend/database/databasetype"
 	"github.com/1Vewton/MaterialScienceTV/backend/user/userdata"
-	"github.com/1Vewton/MaterialScienceTV/backend/utils/config"
 	"github.com/1Vewton/MaterialScienceTV/backend/utils/logger"
 	"github.com/glebarez/sqlite"
 	"gorm.io/driver/mysql"
@@ -25,26 +24,29 @@ func init() {
 }
 
 // InitDataBase Initialize the database
-func InitDataBase() error {
+func InitDataBase(
+	dbType databasetype.DBType,
+	databaseURL string,
+) error {
 	var err error
 	// Initialize the database connection
-	switch config.Config.GetDatabaseType() {
+	switch dbType {
 	case databasetype.Sqlite:
 		databaseLogger.Info("Use Sqlite")
 		DataBase, err = gorm.Open(
-			sqlite.Open(config.Config.GetDatabaseURL()),
+			sqlite.Open(databaseURL),
 			&gorm.Config{},
 		)
 	case databasetype.MySQL:
 		databaseLogger.Info("Use MySQL")
 		DataBase, err = gorm.Open(
-			mysql.Open(config.Config.GetDatabaseURL()),
+			mysql.Open(databaseURL),
 			&gorm.Config{},
 		)
 	case databasetype.PostgreSQL:
 		databaseLogger.Info("Use Postgres")
 		DataBase, err = gorm.Open(
-			postgres.Open(config.Config.GetDatabaseURL()),
+			postgres.Open(databaseURL),
 			&gorm.Config{},
 		)
 	default:
@@ -61,4 +63,14 @@ func InitDataBase() error {
 		return err
 	}
 	return nil
+}
+
+// CloseDatabase closes the database
+func CloseDatabase() error {
+	sqlDB, err := DataBase.DB()
+	if err != nil {
+		return err
+	}
+	err = sqlDB.Close()
+	return err
 }

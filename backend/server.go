@@ -4,8 +4,11 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/1Vewton/MaterialScienceTV/backend/database"
+	"github.com/1Vewton/MaterialScienceTV/backend/database/redismanager"
 	"github.com/1Vewton/MaterialScienceTV/backend/graph"
 	"github.com/1Vewton/MaterialScienceTV/backend/utils/config"
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -19,10 +22,47 @@ import (
 var defaultPort = config.Config.GetServerPort()
 
 func init() {
-	err := database.InitDataBase()
+	err := database.InitDataBase(
+		config.Config.GetDatabaseType(),
+		config.Config.GetDatabaseURL(),
+	)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
 	}
+	dialTimeOut, err := config.Config.GetRedisDialTimeout()
+	if err != nil {
+		panic(err)
+	}
+	readTimeOut, err := config.Config.GetRedisReadTimeout()
+	if err != nil {
+		panic(err)
+	}
+	writeTimeOut, err := config.Config.GetRedisWriteTimeout()
+	if err != nil {
+		panic(err)
+	}
+	maxRetries, err := config.Config.GetRedisMaxRetries()
+	if err != nil {
+		panic(err)
+	}
+	maxRetriyBackoff, err := config.Config.GetRedisMaxRetryBackOff()
+	if err != nil {
+		panic(err)
+	}
+	minRetriyBackoff, err := config.Config.GetRedisMinRetryBackOff()
+	if err != nil {
+		panic(err)
+	}
+	redismanager.InitRedisClient(
+		config.Config.GetRedisURL(),
+		config.Config.GetRedisPassword(),
+		dialTimeOut,
+		readTimeOut,
+		writeTimeOut,
+		maxRetries,
+		maxRetriyBackoff,
+		minRetriyBackoff,
+	)
 }
 
 func main() {
@@ -48,5 +88,24 @@ func main() {
 	http.Handle("/query", srv)
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	runServer := func() {
+		log.Fatal(http.ListenAndServe(":"+port, nil))
+	}
+	go runServer()
+	c := make(chan os.Signal, 1)
+	signal.Notify(
+		c,
+		syscall.SIGINT,
+		syscall.SIGQUIT,
+		syscall.SIGTERM,
+	)
+	<-c
+	err := database.CloseDatabase()
+	if err != nil {
+		panic(err)
+	}
+	err = redismanager.Close()
+	if err != nil {
+		panic(err)
+	}
 }
