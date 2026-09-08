@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/1Vewton/MaterialScienceTV/backend/database/databasetype"
+	"github.com/1Vewton/MaterialScienceTV/backend/internal/database/databasetype"
 )
 
 // SetConfigString set the config or return the value in String field directly

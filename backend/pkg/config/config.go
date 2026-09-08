@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/1Vewton/MaterialScienceTV/backend/database/databasetype"
+	"github.com/1Vewton/MaterialScienceTV/backend/internal/database/databasetype"
 )
 
 // config struct include the basic settings.

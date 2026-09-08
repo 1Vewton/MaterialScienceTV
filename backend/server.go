@@ -7,10 +7,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/1Vewton/MaterialScienceTV/backend/database"
-	"github.com/1Vewton/MaterialScienceTV/backend/database/redismanager"
 	"github.com/1Vewton/MaterialScienceTV/backend/graph"
-	"github.com/1Vewton/MaterialScienceTV/backend/utils/config"
+	"github.com/1Vewton/MaterialScienceTV/backend/internal/database"
+	"github.com/1Vewton/MaterialScienceTV/backend/internal/database/redismanager"
+	"github.com/1Vewton/MaterialScienceTV/backend/pkg/config"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/lru"

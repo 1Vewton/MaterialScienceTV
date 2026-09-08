@@ -3,7 +3,7 @@ package config
 import (
 	"testing"
 
-	"github.com/1Vewton/MaterialScienceTV/backend/database/databasetype"
+	"github.com/1Vewton/MaterialScienceTV/backend/internal/database/databasetype"
 )
 
 // Test the env reading of string var

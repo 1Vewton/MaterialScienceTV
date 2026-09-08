@@ -3,7 +3,7 @@ package database
 import (
 	"testing"
 
-	"github.com/1Vewton/MaterialScienceTV/backend/database/databasetype"
+	"github.com/1Vewton/MaterialScienceTV/backend/internal/database/databasetype"
 )
 
 // Test database initialization

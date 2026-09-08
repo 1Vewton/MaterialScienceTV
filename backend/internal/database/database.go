@@ -3,9 +3,9 @@ package database
 import (
 	"errors"
 
-	"github.com/1Vewton/MaterialScienceTV/backend/database/databasetype"
-	"github.com/1Vewton/MaterialScienceTV/backend/user/userdata"
-	"github.com/1Vewton/MaterialScienceTV/backend/utils/logger"
+	"github.com/1Vewton/MaterialScienceTV/backend/internal/database/databasetype"
+	"github.com/1Vewton/MaterialScienceTV/backend/internal/user/userdata"
+	"github.com/1Vewton/MaterialScienceTV/backend/pkg/logger"
 	"github.com/glebarez/sqlite"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"

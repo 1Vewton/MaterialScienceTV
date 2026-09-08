@@ -4,7 +4,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/1Vewton/MaterialScienceTV/backend/database/databasetype"
+	"github.com/1Vewton/MaterialScienceTV/backend/internal/database/databasetype"
 )
 
 // GetEnvString returns the string value stored in the environment
