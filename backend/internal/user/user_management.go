@@ -25,17 +25,17 @@ func (user *TmpUser) UploadToRedis(
 	registerToken string,
 	lifeTime time.Duration,
 ) error {
-	encodedJson, err := json.Marshal(
+	encodedJSON, err := json.Marshal(
 		user,
 	)
 	if err != nil {
 		return err
 	}
-	stringJson := string(encodedJson)
+	stringJSON := string(encodedJSON)
 	_, err = client.Set(
 		ctx,
 		registerToken,
-		stringJson,
+		stringJSON,
 		lifeTime,
 	).Result()
 	return err
