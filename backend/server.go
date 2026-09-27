@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"github.com/1Vewton/MaterialScienceTV/backend/internal/database/redismanager"
 	"github.com/1Vewton/MaterialScienceTV/backend/internal/middleware"
 	"github.com/1Vewton/MaterialScienceTV/backend/pkg/config"
+	"github.com/1Vewton/MaterialScienceTV/backend/pkg/logger"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/lru"
@@ -21,6 +23,11 @@ import (
 )
 
 var defaultPort = config.Config.GetServerPort()
+
+var mainLogger = logger.NewLogger(
+	"Application",
+	nil,
+)
 
 func init() {
 	resDB, err := database.InitDataBase(
@@ -65,6 +72,12 @@ func init() {
 		maxRetriyBackoff,
 		minRetriyBackoff,
 	)
+	mainLogger.Info(
+		fmt.Sprintf(
+			"successfully connected to %s",
+			config.Config.GetRedisURL(),
+		),
+	)
 }
 
 func main() {
@@ -86,6 +99,7 @@ func main() {
 		Cache: lru.New[string](100),
 	})
 
+	// Add middleware here
 	serverHandler := playground.Handler("GraphQL playground", "/query")
 	serverHandler = middleware.SetCookieMiddleware(
 		serverHandler,
@@ -111,12 +125,18 @@ func main() {
 		database.DataBase,
 	)
 	if err != nil {
+		mainLogger.Error(
+			err.Error(),
+		)
 		panic(err)
 	}
 	err = redismanager.Close(
 		redismanager.RedisClient,
 	)
 	if err != nil {
+		mainLogger.Error(
+			err.Error(),
+		)
 		panic(err)
 	}
 }

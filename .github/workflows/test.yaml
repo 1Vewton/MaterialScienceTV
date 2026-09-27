@@ -15,6 +15,12 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version-file: backend/go.mod
+    
+    - name: Start Redis
+      uses: supercharge/redis-github-action@1.8.1
+      with:
+        redis-version: [5]
+        redis-port: 12345
 
     - name: Download dependencies
       working-directory: backend
