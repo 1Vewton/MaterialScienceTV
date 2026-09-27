@@ -10,6 +10,7 @@ import (
 	"github.com/1Vewton/MaterialScienceTV/backend/graph"
 	"github.com/1Vewton/MaterialScienceTV/backend/internal/database"
 	"github.com/1Vewton/MaterialScienceTV/backend/internal/database/redismanager"
+	"github.com/1Vewton/MaterialScienceTV/backend/internal/middleware"
 	"github.com/1Vewton/MaterialScienceTV/backend/pkg/config"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
@@ -22,10 +23,11 @@ import (
 var defaultPort = config.Config.GetServerPort()
 
 func init() {
-	err := database.InitDataBase(
+	resDB, err := database.InitDataBase(
 		config.Config.GetDatabaseType(),
 		config.Config.GetDatabaseURL(),
 	)
+	database.DataBase = resDB
 	if err != nil {
 		panic(err)
 	}
@@ -53,7 +55,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	redismanager.InitRedisClient(
+	redismanager.RedisClient = redismanager.InitRedisClient(
 		config.Config.GetRedisURL(),
 		config.Config.GetRedisPassword(),
 		dialTimeOut,
@@ -84,7 +86,12 @@ func main() {
 		Cache: lru.New[string](100),
 	})
 
-	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
+	serverHandler := playground.Handler("GraphQL playground", "/query")
+	serverHandler = middleware.SetCookieMiddleware(
+		serverHandler,
+	)
+
+	http.Handle("/", serverHandler)
 	http.Handle("/query", srv)
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
@@ -100,11 +107,15 @@ func main() {
 		syscall.SIGTERM,
 	)
 	<-c
-	err := database.CloseDatabase()
+	err := database.CloseDatabase(
+		database.DataBase,
+	)
 	if err != nil {
 		panic(err)
 	}
-	err = redismanager.Close()
+	err = redismanager.Close(
+		redismanager.RedisClient,
+	)
 	if err != nil {
 		panic(err)
 	}

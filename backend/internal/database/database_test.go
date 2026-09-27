@@ -8,7 +8,7 @@ import (
 
 // Test database initialization
 func TestDataBaseInitialization(t *testing.T) {
-	err := InitDataBase(
+	_, err := InitDataBase(
 		databasetype.Sqlite,
 		":memory:",
 	)

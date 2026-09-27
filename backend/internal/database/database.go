@@ -27,47 +27,50 @@ func init() {
 func InitDataBase(
 	dbType databasetype.DBType,
 	databaseURL string,
-) error {
+) (*gorm.DB, error) {
 	var err error
+	var resDB *gorm.DB
 	// Initialize the database connection
 	switch dbType {
 	case databasetype.Sqlite:
 		databaseLogger.Info("Use Sqlite")
-		DataBase, err = gorm.Open(
+		resDB, err = gorm.Open(
 			sqlite.Open(databaseURL),
 			&gorm.Config{},
 		)
 	case databasetype.MySQL:
 		databaseLogger.Info("Use MySQL")
-		DataBase, err = gorm.Open(
+		resDB, err = gorm.Open(
 			mysql.Open(databaseURL),
 			&gorm.Config{},
 		)
 	case databasetype.PostgreSQL:
 		databaseLogger.Info("Use Postgres")
-		DataBase, err = gorm.Open(
+		resDB, err = gorm.Open(
 			postgres.Open(databaseURL),
 			&gorm.Config{},
 		)
 	default:
-		return errors.New("Database type not support")
+		return nil, errors.New("Database type not support")
 	}
 	if err != nil {
 		databaseLogger.Error(err.Error())
-		return err
+		return nil, err
 	}
 	// Automigrate the data
-	err = DataBase.AutoMigrate(&userdata.User{})
+	err = resDB.AutoMigrate(&userdata.User{})
 	if err != nil {
 		databaseLogger.Error(err.Error())
-		return err
+		return nil, err
 	}
-	return nil
+	return resDB, nil
 }
 
 // CloseDatabase closes the database
-func CloseDatabase() error {
-	sqlDB, err := DataBase.DB()
+func CloseDatabase(
+	db *gorm.DB,
+) error {
+	sqlDB, err := db.DB()
 	if err != nil {
 		return err
 	}

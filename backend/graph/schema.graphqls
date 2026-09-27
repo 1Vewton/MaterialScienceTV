@@ -17,6 +17,12 @@ type User {
   registeredAt: String!
 }
 
+# Info defines the info for returning
+type Info {
+  success: Boolean!
+  message: String!
+}
+
 type Query {
   todos: [Todo!]!
 }
@@ -26,6 +32,7 @@ input NewTodo {
   userId: String!
 }
 
+# NewUser defines the schema for creating user
 input NewUser {
   userName: String!
   password: String!
@@ -33,6 +40,6 @@ input NewUser {
 }
 
 type Mutation {
-  createTodo(input: NewTodo!): Todo!
-  createUser(input: NewUser!): User!
+  createTodo(input: NewTodo!): Info!
+  createUser(input: NewUser!): Info!
 }
