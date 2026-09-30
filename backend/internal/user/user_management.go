@@ -14,7 +14,24 @@ type TmpUser struct {
 	UserName     string `redis:"user_name"`
 	Password     string `redis:"password"`
 	Email        string `redis:"email"`
-	RegisteredAt int    `redis:"registered_at"`
+	RegisteredAt int64  `redis:"registered_at"`
+}
+
+// NewTmpUser creates new tmp user
+func NewTmpUser(
+	userID string,
+	userName string,
+	password string,
+	email string,
+	RegisteredAt time.Time,
+) *TmpUser {
+	return &TmpUser{
+		UserID:       userID,
+		UserName:     userName,
+		Password:     password,
+		Email:        email,
+		RegisteredAt: RegisteredAt.UnixNano(),
+	}
 }
 
 // UploadToRedis uploads tmp user to redis.
@@ -63,4 +80,13 @@ func GetTmpUser(
 		return nil, err
 	}
 	return &result, nil
+}
+
+// Equals checks if two users are the same
+func (user *TmpUser) Equals(
+	another *TmpUser,
+) bool {
+	return user.Email == another.Email &&
+		user.Password == another.Password &&
+		user.RegisteredAt == another.RegisteredAt
 }

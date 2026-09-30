@@ -54,24 +54,30 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	maxRetriyBackoff, err := config.Config.GetRedisMaxRetryBackOff()
+	maxRetryBackoff, err := config.Config.GetRedisMaxRetryBackOff()
 	if err != nil {
 		panic(err)
 	}
-	minRetriyBackoff, err := config.Config.GetRedisMinRetryBackOff()
+	minRetryBackoff, err := config.Config.GetRedisMinRetryBackOff()
 	if err != nil {
 		panic(err)
 	}
-	redismanager.RedisClient = redismanager.InitRedisClient(
+	redismanager.RedisClient = redismanager.NewRedisConfig(
 		config.Config.GetRedisURL(),
 		config.Config.GetRedisPassword(),
+	).WithDialTimeout(
 		dialTimeOut,
-		readTimeOut,
+	).WithWriteTimeout(
 		writeTimeOut,
+	).WithReadTimeout(
+		readTimeOut,
+	).WithMaxRetryBackoff(
+		maxRetryBackoff,
+	).WithMinRetryBackoff(
+		minRetryBackoff,
+	).WithMaxRetries(
 		maxRetries,
-		maxRetriyBackoff,
-		minRetriyBackoff,
-	)
+	).ToClient()
 	mainLogger.Info(
 		fmt.Sprintf(
 			"successfully connected to %s",
