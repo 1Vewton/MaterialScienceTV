@@ -28,6 +28,7 @@ func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) 
 
 // CreateUser is the resolver for the createUser field.
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (*model.Info, error) {
+	// Get writer
 	rawWriter := ctx.Value(ctxkey.ResponseWriterKey)
 	if rawWriter == nil {
 		return &model.Info{
@@ -44,6 +45,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 				"the value passed from context is not a response writer",
 			)
 	}
+	// New tmp user
 	token := redismanager.NewToken("register")
 	newUserId := uuid.NewString()
 	newTmpUser := user.NewTmpUser(
@@ -69,6 +71,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 			Success: false,
 		}, err
 	}
+	// Set cookie
 	cookie := http.Cookie{
 		Name:   cookiekey.RegisterTokenKey,
 		Value:  token,
@@ -81,6 +84,11 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 	return &model.Info{
 		Success: true,
 	}, nil
+}
+
+// VerifyUser is the resolver for the verifyUser field.
+func (r *mutationResolver) VerifyUser(ctx context.Context) (*model.Info, error) {
+	panic(fmt.Errorf("not implemented: VerifyUser - verifyUser"))
 }
 
 // Todos is the resolver for the todos field.

@@ -11,7 +11,7 @@ import (
 	"github.com/1Vewton/MaterialScienceTV/backend/graph"
 	"github.com/1Vewton/MaterialScienceTV/backend/internal/database"
 	"github.com/1Vewton/MaterialScienceTV/backend/internal/database/redismanager"
-	"github.com/1Vewton/MaterialScienceTV/backend/internal/middleware"
+	"github.com/1Vewton/MaterialScienceTV/backend/internal/middlewares"
 	"github.com/1Vewton/MaterialScienceTV/backend/internal/user"
 	"github.com/1Vewton/MaterialScienceTV/backend/pkg/config"
 	"github.com/1Vewton/MaterialScienceTV/backend/pkg/logger"
@@ -20,6 +20,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/go-chi/chi/v5"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -94,7 +95,13 @@ func main() {
 		port = defaultPort
 	}
 
-	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{}}))
+	srv := handler.NewDefaultServer(
+		graph.NewExecutableSchema(
+			graph.Config{
+				Resolvers: &graph.Resolver{},
+			},
+		),
+	)
 
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})
@@ -107,18 +114,22 @@ func main() {
 		Cache: lru.New[string](100),
 	})
 
-	// Add middleware here
-	serverHandler := playground.Handler("GraphQL playground", "/query")
-	serverHandler = middleware.SetCookieMiddleware(
-		serverHandler,
+	// router
+	router := chi.NewRouter()
+
+	// add middleware here
+	router.Use(
+		middlewares.SetCookieMiddleware(),
 	)
 
-	http.Handle("/", serverHandler)
-	http.Handle("/query", srv)
+	serverHandler := playground.Handler("GraphQL playground", "/query")
+
+	router.Handle("/", serverHandler)
+	router.Handle("/query", srv)
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 	runServer := func() {
-		log.Fatal(http.ListenAndServe(":"+port, nil))
+		log.Fatal(http.ListenAndServe(":"+port, router))
 	}
 	go runServer()
 	c := make(chan os.Signal, 1)

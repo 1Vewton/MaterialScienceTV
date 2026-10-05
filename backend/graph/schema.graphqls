@@ -15,7 +15,6 @@ type User {
   userName: String!
   password: String!
   email: String!
-  registeredAt: String!
 }
 
 # Info defines the info for returning
@@ -46,5 +45,5 @@ type Mutation {
   # createUser creates new user
   createUser(input: NewUser!): Info!
   # verifyUser verifies user
-  verifyUser(registerToken: String!): Info!
+  verifyUser: Info!
 }

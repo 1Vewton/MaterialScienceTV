@@ -32,9 +32,8 @@ type Todo struct {
 }
 
 type User struct {
-	UserID       string `json:"userID"`
-	UserName     string `json:"userName"`
-	Password     string `json:"password"`
-	Email        string `json:"email"`
-	RegisteredAt string `json:"registeredAt"`
+	UserID   string `json:"userID"`
+	UserName string `json:"userName"`
+	Password string `json:"password"`
+	Email    string `json:"email"`
 }

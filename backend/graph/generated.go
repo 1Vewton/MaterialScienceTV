@@ -45,6 +45,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		CreateTodo func(childComplexity int, input model.NewTodo) int
 		CreateUser func(childComplexity int, input model.NewUser) int
+		VerifyUser func(childComplexity int) int
 	}
 
 	Query struct {
@@ -59,11 +60,10 @@ type ComplexityRoot struct {
 	}
 
 	User struct {
-		Email        func(childComplexity int) int
-		Password     func(childComplexity int) int
-		RegisteredAt func(childComplexity int) int
-		UserID       func(childComplexity int) int
-		UserName     func(childComplexity int) int
+		Email    func(childComplexity int) int
+		Password func(childComplexity int) int
+		UserID   func(childComplexity int) int
+		UserName func(childComplexity int) int
 	}
 }
 
@@ -74,6 +74,7 @@ type ComplexityRoot struct {
 type MutationResolver interface {
 	CreateTodo(ctx context.Context, input model.NewTodo) (*model.Info, error)
 	CreateUser(ctx context.Context, input model.NewUser) (*model.Info, error)
+	VerifyUser(ctx context.Context) (*model.Info, error)
 }
 type QueryResolver interface {
 	Todos(ctx context.Context) ([]*model.Todo, error)
@@ -132,6 +133,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.CreateUser(childComplexity, args["input"].(model.NewUser)), true
+	case "Mutation.verifyUser":
+		if e.ComplexityRoot.Mutation.VerifyUser == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Mutation.VerifyUser(childComplexity), true
 
 	case "Query.todos":
 		if e.ComplexityRoot.Query.Todos == nil {
@@ -177,12 +184,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.User.Password(childComplexity), true
-	case "User.registeredAt":
-		if e.ComplexityRoot.User.RegisteredAt == nil {
-			break
-		}
-
-		return e.ComplexityRoot.User.RegisteredAt(childComplexity), true
 	case "User.userID":
 		if e.ComplexityRoot.User.UserID == nil {
 			break
@@ -676,6 +677,38 @@ func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_verifyUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_verifyUser(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Mutation().VerifyUser(ctx)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Info) graphql.Marshaler {
+			return ec.marshalNInfo2ᚖgithubᚗcomᚋ1VewtonᚋMaterialScienceTVᚋbackendᚋgraphᚋmodelᚐInfo(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_verifyUser(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Info(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_todos(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -965,29 +998,6 @@ func (ec *executionContext) _User_email(ctx context.Context, field graphql.Colle
 	)
 }
 func (ec *executionContext) fieldContext_User_email(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	return graphql.NewScalarFieldContext("User", field, false, false, errors.New("field of type String does not have child fields"))
-}
-
-func (ec *executionContext) _User_registeredAt(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.fieldContext_User_registeredAt(ctx, field)
-		},
-		func(ctx context.Context) (any, error) {
-			return obj.RegisteredAt, nil
-		},
-		nil,
-		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
-			return ec.marshalNString2string(ctx, selections, v)
-		},
-		true,
-		true,
-	)
-}
-func (ec *executionContext) fieldContext_User_registeredAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("User", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
@@ -2216,6 +2226,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "verifyUser":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_verifyUser(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -2396,11 +2413,6 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "email":
 			out.Values[i] = ec._User_email(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "registeredAt":
-			out.Values[i] = ec._User_registeredAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

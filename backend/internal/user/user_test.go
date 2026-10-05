@@ -21,14 +21,16 @@ func TestUserCRUD(t *testing.T) {
 		t.Error(err)
 	}
 	id := uuid.NewString()
+	initialUser := NewUser(
+		"114514",
+		"abc114514",
+		".com",
+		id,
+	)
 	err = AddUser(
 		ctx,
 		db,
-		&User{
-			UserID:   id,
-			UserName: "Tester",
-			Password: "1145141919810",
-		},
+		initialUser,
 	)
 	if err != nil {
 		t.Error(err)
@@ -45,6 +47,21 @@ func TestUserCRUD(t *testing.T) {
 		t.Errorf(
 			"%s id does not exists in database after insertion",
 			id,
+		)
+	}
+	fetchedUser, err := GetUser(
+		ctx,
+		db,
+		id,
+	)
+	if err != nil {
+		t.Error(err)
+	}
+	if !fetchedUser.Equals(
+		initialUser,
+	) {
+		t.Error(
+			"the fetched user is not the same as the initial user",
 		)
 	}
 }

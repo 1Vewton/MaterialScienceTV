@@ -17,6 +17,32 @@ type User struct {
 	RegisteredAt time.Time
 }
 
+// Equals tests if two users are the same
+func (user *User) Equals(
+	another *User,
+) bool {
+	return user.UserID == another.UserID &&
+		user.UserName == another.UserName &&
+		user.Password == another.Password &&
+		user.Email == another.Email
+}
+
+// NewUser creates new user
+func NewUser(
+	userName string,
+	password string,
+	email string,
+	id string,
+) *User {
+	return &User{
+		UserID:       id,
+		UserName:     userName,
+		Password:     password,
+		Email:        email,
+		RegisteredAt: time.Now(),
+	}
+}
+
 // AddUser adds new user
 func AddUser(
 	ctx context.Context,
