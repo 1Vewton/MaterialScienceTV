@@ -16,6 +16,7 @@ type config struct {
 	redisMaxRetries      *int
 	redisMinRetryBackoff *int
 	redisMaxRetryBackoff *int
+	tmpUserLifetime      *int
 	databaseType         *databasetype.DBType
 }
 
@@ -115,5 +116,14 @@ func (cfg *config) GetRedisMinRetryBackOff() (int, error) {
 		"REDIS_MIN_RETRY_BACKOFF",
 		10,
 		&cfg.redisMinRetryBackoff,
+	)
+}
+
+// GetTmpUserLifetime gets the min retry backoff for the Redis
+func (cfg *config) GetTmpUserLifetime() (int, error) {
+	return SetConfigInteger(
+		"TMP_USER_LIFETIME",
+		10,
+		&cfg.tmpUserLifetime,
 	)
 }

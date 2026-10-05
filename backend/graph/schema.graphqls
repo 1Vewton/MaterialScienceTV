@@ -9,6 +9,7 @@ type Todo {
   ownerID: String!
 }
 
+# User defines a single user
 type User {
   userID: String!
   userName: String!
@@ -40,6 +41,10 @@ input NewUser {
 }
 
 type Mutation {
+  # createTodo creates new todo
   createTodo(input: NewTodo!): Info!
+  # createUser creates new user
   createUser(input: NewUser!): Info!
+  # verifyUser verifies user
+  verifyUser(registerToken: String!): Info!
 }

@@ -25,7 +25,6 @@ func TestUploadAndFetch(
 		"test",
 		"A114514",
 		"@gmail.com",
-		time.Now(),
 	)
 	err := testUser.UploadToRedis(
 		ctx,

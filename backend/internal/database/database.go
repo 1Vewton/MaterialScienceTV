@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	"github.com/1Vewton/MaterialScienceTV/backend/internal/database/databasetype"
-	"github.com/1Vewton/MaterialScienceTV/backend/internal/user/userdata"
 	"github.com/1Vewton/MaterialScienceTV/backend/pkg/logger"
 	"github.com/glebarez/sqlite"
 	"gorm.io/driver/mysql"
@@ -27,6 +26,7 @@ func init() {
 func InitDataBase(
 	dbType databasetype.DBType,
 	databaseURL string,
+	tables ...any,
 ) (*gorm.DB, error) {
 	var err error
 	var resDB *gorm.DB
@@ -58,7 +58,9 @@ func InitDataBase(
 		return nil, err
 	}
 	// Automigrate the data
-	err = resDB.AutoMigrate(&userdata.User{})
+	err = resDB.AutoMigrate(
+		tables...,
+	)
 	if err != nil {
 		databaseLogger.Error(err.Error())
 		return nil, err

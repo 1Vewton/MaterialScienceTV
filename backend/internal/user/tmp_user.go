@@ -23,14 +23,13 @@ func NewTmpUser(
 	userName string,
 	password string,
 	email string,
-	RegisteredAt time.Time,
 ) *TmpUser {
 	return &TmpUser{
 		UserID:       userID,
 		UserName:     userName,
 		Password:     password,
 		Email:        email,
-		RegisteredAt: RegisteredAt.UnixNano(),
+		RegisteredAt: time.Now().UnixNano(),
 	}
 }
 
@@ -89,4 +88,19 @@ func (user *TmpUser) Equals(
 	return user.Email == another.Email &&
 		user.Password == another.Password &&
 		user.RegisteredAt == another.RegisteredAt
+}
+
+// ToUserData converts tmp user to user data that stores in the database
+func (user *TmpUser) ToUserData() *User {
+	newUserData := &User{
+		UserID:   user.UserID,
+		UserName: user.UserName,
+		Password: user.Password,
+		Email:    user.Email,
+		RegisteredAt: time.Unix(
+			0,
+			user.RegisteredAt,
+		),
+	}
+	return newUserData
 }

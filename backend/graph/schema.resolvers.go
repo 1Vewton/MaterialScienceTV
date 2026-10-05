@@ -7,9 +7,18 @@ package graph
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
+	"time"
 
 	"github.com/1Vewton/MaterialScienceTV/backend/graph/model"
+	"github.com/1Vewton/MaterialScienceTV/backend/internal/cookiekey"
+	"github.com/1Vewton/MaterialScienceTV/backend/internal/ctxkey"
+	"github.com/1Vewton/MaterialScienceTV/backend/internal/database/redismanager"
+	"github.com/1Vewton/MaterialScienceTV/backend/internal/user"
+	"github.com/1Vewton/MaterialScienceTV/backend/pkg/config"
+	"github.com/google/uuid"
 )
 
 // CreateTodo is the resolver for the createTodo field.
@@ -19,6 +28,56 @@ func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) 
 
 // CreateUser is the resolver for the createUser field.
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (*model.Info, error) {
+	rawWriter := ctx.Value(ctxkey.ResponseWriterKey)
+	if rawWriter == nil {
+		return &model.Info{
+				Success: false,
+			}, errors.New(
+				"cannot get the response writer from the context",
+			)
+	}
+	writer, ok := rawWriter.(http.ResponseWriter)
+	if !ok {
+		return &model.Info{
+				Success: false,
+			}, errors.New(
+				"the value passed from context is not a response writer",
+			)
+	}
+	token := redismanager.NewToken("register")
+	newUserId := uuid.NewString()
+	newTmpUser := user.NewTmpUser(
+		newUserId,
+		input.UserName,
+		input.Password,
+		input.Email,
+	)
+	userLifetime, err := config.Config.GetTmpUserLifetime()
+	if err != nil {
+		return &model.Info{
+			Success: false,
+		}, err
+	}
+	err = newTmpUser.UploadToRedis(
+		ctx,
+		redismanager.RedisClient,
+		token,
+		time.Duration(userLifetime)*time.Minute,
+	)
+	if err != nil {
+		return &model.Info{
+			Success: false,
+		}, err
+	}
+	cookie := http.Cookie{
+		Name:   cookiekey.RegisterTokenKey,
+		Value:  token,
+		MaxAge: userLifetime * 60,
+	}
+	writer.Header().Set(
+		"Set-Cookie",
+		cookie.String(),
+	)
 	return &model.Info{
 		Success: true,
 	}, nil

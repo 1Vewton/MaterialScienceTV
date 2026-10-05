@@ -1,6 +1,9 @@
 package redismanager
 
 import (
+	"fmt"
+
+	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -13,4 +16,16 @@ func Close(
 ) error {
 	err := client.Close()
 	return err
+}
+
+// NewToken creates token for certain module
+func NewToken(
+	moduleName string,
+) string {
+	id := uuid.NewString()
+	return fmt.Sprintf(
+		"%s:%s",
+		moduleName,
+		id,
+	)
 }
