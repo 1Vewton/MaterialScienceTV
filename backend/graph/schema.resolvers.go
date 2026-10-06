@@ -51,13 +51,12 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 			return &model.Info{
 					Success: false,
 				}, errors.New(
-					"you already submitted a register request!",
+					"you already submitted a register request",
 				)
-		} else {
-			return &model.Info{
-				Success: false,
-			}, err
 		}
+		return &model.Info{
+			Success: false,
+		}, err
 	}
 	// New tmp user
 	token := redismanager.NewToken("register")
@@ -112,18 +111,17 @@ func (r *mutationResolver) VerifyUser(ctx context.Context) (*model.Info, error) 
 		}, err
 	}
 	requestCookie, err := request.Cookie(cookie.RegisterTokenKey)
-	if err != http.ErrNoCookie {
-		if err == nil {
+	if err != nil {
+		if err == http.ErrNoCookie {
 			return &model.Info{
 					Success: false,
 				}, errors.New(
-					"you already submitted a register request!",
+					"session expired or not exists",
 				)
-		} else {
-			return &model.Info{
-				Success: false,
-			}, err
 		}
+		return &model.Info{
+			Success: false,
+		}, err
 	}
 	token := requestCookie.Value
 	tmpUser, err := user.GetTmpUser(
