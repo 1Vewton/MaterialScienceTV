@@ -49,6 +49,20 @@ func TestUserCRUD(t *testing.T) {
 			id,
 		)
 	}
+	exists, err = HasUserName(
+		ctx,
+		db,
+		"114514",
+	)
+	if err != nil {
+		t.Error(err)
+	}
+	if !exists {
+		t.Errorf(
+			"%s id does not exists in database after insertion",
+			id,
+		)
+	}
 	fetchedUser, err := GetUser(
 		ctx,
 		db,

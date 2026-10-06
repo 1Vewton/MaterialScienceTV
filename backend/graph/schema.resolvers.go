@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"github.com/1Vewton/MaterialScienceTV/backend/graph/model"
-	"github.com/1Vewton/MaterialScienceTV/backend/internal/cookiekey"
-	"github.com/1Vewton/MaterialScienceTV/backend/internal/ctxkey"
+	"github.com/1Vewton/MaterialScienceTV/backend/internal/cookie"
+	"github.com/1Vewton/MaterialScienceTV/backend/internal/database"
 	"github.com/1Vewton/MaterialScienceTV/backend/internal/database/redismanager"
 	"github.com/1Vewton/MaterialScienceTV/backend/internal/user"
 	"github.com/1Vewton/MaterialScienceTV/backend/pkg/config"
@@ -29,21 +29,35 @@ func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) 
 // CreateUser is the resolver for the createUser field.
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (*model.Info, error) {
 	// Get writer
-	rawWriter := ctx.Value(ctxkey.ResponseWriterKey)
-	if rawWriter == nil {
+	writer, err := cookie.GetResponseWriterFromContext(
+		ctx,
+	)
+	if err != nil {
 		return &model.Info{
-				Success: false,
-			}, errors.New(
-				"cannot get the response writer from the context",
-			)
+			Success: false,
+		}, err
 	}
-	writer, ok := rawWriter.(http.ResponseWriter)
-	if !ok {
+	request, err := cookie.GetRequestFromContext(
+		ctx,
+	)
+	if err != nil {
 		return &model.Info{
+			Success: false,
+		}, err
+	}
+	_, err = request.Cookie(cookie.RegisterTokenKey)
+	if err != http.ErrNoCookie {
+		if err == nil {
+			return &model.Info{
+					Success: false,
+				}, errors.New(
+					"you already submitted a register request!",
+				)
+		} else {
+			return &model.Info{
 				Success: false,
-			}, errors.New(
-				"the value passed from context is not a response writer",
-			)
+			}, err
+		}
 	}
 	// New tmp user
 	token := redismanager.NewToken("register")
@@ -73,7 +87,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 	}
 	// Set cookie
 	cookie := http.Cookie{
-		Name:   cookiekey.RegisterTokenKey,
+		Name:   cookie.RegisterTokenKey,
 		Value:  token,
 		MaxAge: userLifetime * 60,
 	}
@@ -88,7 +102,54 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 
 // VerifyUser is the resolver for the verifyUser field.
 func (r *mutationResolver) VerifyUser(ctx context.Context) (*model.Info, error) {
-	panic(fmt.Errorf("not implemented: VerifyUser - verifyUser"))
+	// Get token stored in cookies
+	request, err := cookie.GetRequestFromContext(
+		ctx,
+	)
+	if err != nil {
+		return &model.Info{
+			Success: false,
+		}, err
+	}
+	requestCookie, err := request.Cookie(cookie.RegisterTokenKey)
+	if err != http.ErrNoCookie {
+		if err == nil {
+			return &model.Info{
+					Success: false,
+				}, errors.New(
+					"you already submitted a register request!",
+				)
+		} else {
+			return &model.Info{
+				Success: false,
+			}, err
+		}
+	}
+	token := requestCookie.Value
+	tmpUser, err := user.GetTmpUser(
+		ctx,
+		redismanager.RedisClient,
+		token,
+	)
+	if err != nil {
+		return &model.Info{
+			Success: false,
+		}, err
+	}
+	realUser := tmpUser.ToUserData()
+	err = user.AddUser(
+		ctx,
+		database.DataBase,
+		realUser,
+	)
+	if err != nil {
+		return &model.Info{
+			Success: false,
+		}, err
+	}
+	return &model.Info{
+		Success: true,
+	}, err
 }
 
 // Todos is the resolver for the todos field.

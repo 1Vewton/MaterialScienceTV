@@ -1,4 +1,4 @@
-package cookiekey
+package cookie
 
 const (
 	// RegisterTokenKey defines the key for registration token

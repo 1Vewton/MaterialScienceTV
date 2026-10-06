@@ -17,6 +17,11 @@ func SetCookieMiddleware() func(next http.Handler) http.Handler {
 					ctxkey.ResponseWriterKey,
 					w,
 				)
+				ctx = context.WithValue(
+					ctx,
+					ctxkey.RequestKey,
+					r,
+				)
 				next.ServeHTTP(
 					w,
 					r.WithContext(ctx),

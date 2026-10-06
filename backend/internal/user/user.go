@@ -76,6 +76,26 @@ func HasUser(
 	return true, nil
 }
 
+// HasUserName checks if user name exists
+func HasUserName(
+	ctx context.Context,
+	db *gorm.DB,
+	userName string,
+) (bool, error) {
+	users, err := gorm.G[*User](db).Where(
+		&User{
+			UserName: userName,
+		},
+	).Find(ctx)
+	if err != nil {
+		return false, err
+	}
+	if len(users) == 0 {
+		return false, nil
+	}
+	return true, nil
+}
+
 // GetUser gets the user
 func GetUser(
 	ctx context.Context,
