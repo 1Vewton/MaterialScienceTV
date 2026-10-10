@@ -46,6 +46,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 		}, err
 	}
 	_, err = request.Cookie(cookie.RegisterTokenKey)
+	// Checks if there is cookie
 	if err != http.ErrNoCookie {
 		if err == nil {
 			return &model.Info{
@@ -57,6 +58,20 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 		return &model.Info{
 			Success: false,
 		}, err
+	}
+	// Checks if there exists a username
+	exists, err := user.HasUserName(
+		ctx,
+		database.DataBase,
+		input.UserName,
+	)
+	if exists {
+		return &model.Info{
+				Success: false,
+			}, fmt.Errorf(
+				"user with username %s already exists",
+				input.UserName,
+			)
 	}
 	// New tmp user
 	token := redismanager.NewToken("register")
@@ -134,7 +149,36 @@ func (r *mutationResolver) VerifyUser(ctx context.Context) (*model.Info, error) 
 			Success: false,
 		}, err
 	}
+	// Checks if there exists a username
+	exists, err := user.HasUserName(
+		ctx,
+		database.DataBase,
+		tmpUser.UserName,
+	)
+	if exists {
+		return &model.Info{
+				Success: false,
+			}, fmt.Errorf(
+				"user with username %s already exists",
+				tmpUser.UserName,
+			)
+	}
+	// Stores user data to the tmpuser
 	realUser := tmpUser.ToUserData()
+	// Checks if there exists a user id
+	exists, err = user.HasUser(
+		ctx,
+		database.DataBase,
+		realUser.UserID,
+	)
+	if exists {
+		return &model.Info{
+				Success: false,
+			}, fmt.Errorf(
+				"user with id %s already exists",
+				realUser.UserID,
+			)
+	}
 	err = user.AddUser(
 		ctx,
 		database.DataBase,
@@ -153,6 +197,30 @@ func (r *mutationResolver) VerifyUser(ctx context.Context) (*model.Info, error) 
 // Todos is the resolver for the todos field.
 func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
 	panic(fmt.Errorf("not implemented: Todos - todos"))
+}
+
+// Login is the resolver for the login field.
+func (r *queryResolver) Login(ctx context.Context, input *model.LoginUserForm) (*model.LoginInfo, error) {
+	_, success, err := user.Login(
+		ctx,
+		database.DataBase,
+		input.UserName,
+		input.Email,
+		input.Password,
+	)
+	if err != nil {
+		return &model.LoginInfo{
+			Success: false,
+		}, err
+	}
+	if !success {
+		return &model.LoginInfo{
+				Success: false,
+			}, fmt.Errorf(
+				"user does not exists",
+			)
+	}
+	return nil, nil
 }
 
 // Mutation returns MutationResolver implementation.

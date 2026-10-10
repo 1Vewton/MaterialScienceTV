@@ -23,10 +23,20 @@ type Info {
   message: String!
 }
 
-type Query {
-  todos: [Todo!]!
+# ReturnUser defines the schema for returning info to user
+type ReturnUser{
+  userName: String!
+  userID: String!
+  email: String!
 }
 
+# LoginInfo defines the schema for returing user info when logged in
+type LoginInfo{
+  success: Boolean!
+  info: ReturnUser
+}
+
+# NewTodo defines schema for creating todo
 input NewTodo {
   text: String!
   userId: String!
@@ -39,6 +49,14 @@ input NewUser {
   email: String!
 }
 
+# LoginUserForm defines form for login
+input LoginUserForm{
+  userName: String
+  email: String
+  password: String!
+}
+
+# Mutation: Change data
 type Mutation {
   # createTodo creates new todo
   createTodo(input: NewTodo!): Info!
@@ -46,4 +64,12 @@ type Mutation {
   createUser(input: NewUser!): Info!
   # verifyUser verifies user
   verifyUser: Info!
+}
+
+# Query: Get data
+type Query {
+  # todos gets all the todos
+  todos: [Todo!]!
+  # login logins the system
+  login(input: LoginUserForm): LoginInfo!
 }

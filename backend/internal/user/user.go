@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"gorm.io/gorm"
@@ -111,4 +112,46 @@ func GetUser(
 		return nil, err
 	}
 	return user, nil
+}
+
+// Login manages the login
+func Login(
+	ctx context.Context,
+	db *gorm.DB,
+	userName *string,
+	email *string,
+	password string,
+) (*User, bool, error) {
+	if userName == nil && email == nil {
+		return nil, false, errors.New(
+			"you must fill one of the fields in userName or email",
+		)
+	} else if userName != nil {
+		user, err := gorm.G[*User](db).Where(
+			&User{
+				UserName: *userName,
+				Password: password,
+			},
+		).Find(ctx)
+		if err != nil {
+			return nil, false, err
+		}
+		if len(user) == 0 {
+			return nil, false, nil
+		}
+		return user[0], true, nil
+	}
+	user, err := gorm.G[*User](db).Where(
+		&User{
+			Email:    *email,
+			Password: password,
+		},
+	).Find(ctx)
+	if err != nil {
+		return nil, false, err
+	}
+	if len(user) == 0 {
+		return nil, false, nil
+	}
+	return user[0], true, nil
 }

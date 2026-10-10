@@ -7,6 +7,17 @@ type Info struct {
 	Message string `json:"message"`
 }
 
+type LoginInfo struct {
+	Success bool        `json:"success"`
+	Info    *ReturnUser `json:"info,omitempty"`
+}
+
+type LoginUserForm struct {
+	UserName *string `json:"userName,omitempty"`
+	Email    *string `json:"email,omitempty"`
+	Password string  `json:"password"`
+}
+
 type Mutation struct {
 }
 
@@ -22,6 +33,12 @@ type NewUser struct {
 }
 
 type Query struct {
+}
+
+type ReturnUser struct {
+	UserName string `json:"userName"`
+	UserID   string `json:"userID"`
+	Email    string `json:"email"`
 }
 
 type Todo struct {

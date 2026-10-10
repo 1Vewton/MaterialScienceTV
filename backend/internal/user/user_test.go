@@ -21,10 +21,13 @@ func TestUserCRUD(t *testing.T) {
 		t.Error(err)
 	}
 	id := uuid.NewString()
+	userName := "114514"
+	password := "abc114514"
+	email := "114514@acceed.com"
 	initialUser := NewUser(
-		"114514",
-		"abc114514",
-		".com",
+		userName,
+		password,
+		email,
 		id,
 	)
 	err = AddUser(
@@ -76,6 +79,78 @@ func TestUserCRUD(t *testing.T) {
 	) {
 		t.Error(
 			"the fetched user is not the same as the initial user",
+		)
+	}
+	_, success, err := Login(
+		ctx,
+		db,
+		&userName,
+		nil,
+		password,
+	)
+	if err != nil {
+		t.Error(err)
+	}
+	if !success {
+		t.Error(
+			"login attempt failed, it is not expected to happen",
+		)
+	}
+	_, success, err = Login(
+		ctx,
+		db,
+		nil,
+		&email,
+		password,
+	)
+	if err != nil {
+		t.Error(err)
+	}
+	if !success {
+		t.Error(
+			"login attempt failed, it is not expected to happen",
+		)
+	}
+	_, _, err = Login(
+		ctx,
+		db,
+		nil,
+		nil,
+		password,
+	)
+	if err == nil {
+		t.Error(
+			"expected to fail",
+		)
+	}
+	_, success, err = Login(
+		ctx,
+		db,
+		&email,
+		nil,
+		password,
+	)
+	if err != nil {
+		t.Error(err)
+	}
+	if success {
+		t.Error(
+			"it is supposed to fail when logging in",
+		)
+	}
+	_, success, err = Login(
+		ctx,
+		db,
+		nil,
+		&userName,
+		password,
+	)
+	if err != nil {
+		t.Error(err)
+	}
+	if success {
+		t.Error(
+			"it is supposed to fail when logging in",
 		)
 	}
 }
