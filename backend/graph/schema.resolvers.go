@@ -100,14 +100,14 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 		}, err
 	}
 	// Set cookie
-	cookie := http.Cookie{
+	cookieRegister := http.Cookie{
 		Name:   cookie.RegisterTokenKey,
 		Value:  token,
 		MaxAge: userLifetime * 60,
 	}
 	writer.Header().Set(
 		"Set-Cookie",
-		cookie.String(),
+		cookieRegister.String(),
 	)
 	return &model.Info{
 		Success: true,
@@ -201,7 +201,28 @@ func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
 
 // Login is the resolver for the login field.
 func (r *queryResolver) Login(ctx context.Context, input *model.LoginUserForm) (*model.LoginInfo, error) {
-	_, success, err := user.Login(
+	request, err := cookie.GetRequestFromContext(
+		ctx,
+	)
+	if err != nil {
+		return &model.LoginInfo{
+			Success: false,
+		}, err
+	}
+	_, err = request.Cookie(cookie.LoginTokenKey)
+	if err == nil {
+		return &model.LoginInfo{
+				Success: false,
+			}, errors.New(
+				"you already logged in",
+			)
+	}
+	if err != http.ErrNoCookie {
+		return &model.LoginInfo{
+			Success: false,
+		}, err
+	}
+	loginUserData, success, err := user.Login(
 		ctx,
 		database.DataBase,
 		input.UserName,
@@ -220,7 +241,53 @@ func (r *queryResolver) Login(ctx context.Context, input *model.LoginUserForm) (
 				"user does not exists",
 			)
 	}
-	return nil, nil
+	token := redismanager.NewToken(
+		"login",
+	)
+	expireTime, err := config.Config.GetLoginTokenExpireTime()
+	if err != nil {
+		return &model.LoginInfo{
+			Success: false,
+		}, err
+	}
+	err = user.UploadLoginToken(
+		ctx,
+		redismanager.RedisClient,
+		token,
+		loginUserData.UserID,
+		time.Duration(expireTime)*time.Minute,
+	)
+	if err != nil {
+		return &model.LoginInfo{
+			Success: false,
+		}, err
+	}
+	// Set Cookie
+	responseWriter, err := cookie.GetResponseWriterFromContext(
+		ctx,
+	)
+	if err != nil {
+		return &model.LoginInfo{
+			Success: false,
+		}, err
+	}
+	cookieLogin := http.Cookie{
+		Name:   cookie.RegisterTokenKey,
+		Value:  token,
+		MaxAge: expireTime * 60,
+	}
+	responseWriter.Header().Set(
+		"Set-Cookie",
+		cookieLogin.String(),
+	)
+	return &model.LoginInfo{
+		Success: true,
+		Info: &model.ReturnUser{
+			UserName: loginUserData.UserName,
+			UserID:   loginUserData.UserID,
+			Email:    loginUserData.Email,
+		},
+	}, nil
 }
 
 // Mutation returns MutationResolver implementation.

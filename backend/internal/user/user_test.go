@@ -2,9 +2,11 @@ package user
 
 import (
 	"testing"
+	"time"
 
 	"github.com/1Vewton/MaterialScienceTV/backend/internal/database"
 	"github.com/1Vewton/MaterialScienceTV/backend/internal/database/databasetype"
+	"github.com/1Vewton/MaterialScienceTV/backend/internal/database/redismanager"
 	"github.com/google/uuid"
 )
 
@@ -17,9 +19,14 @@ func TestUserCRUD(t *testing.T) {
 		":memory:",
 		&User{},
 	)
+	client := redismanager.NewRedisConfig(
+		"localhost:6379",
+		"",
+	).ToClient()
 	if err != nil {
 		t.Error(err)
 	}
+	// CRUD
 	id := uuid.NewString()
 	userName := "114514"
 	password := "abc114514"
@@ -81,6 +88,7 @@ func TestUserCRUD(t *testing.T) {
 			"the fetched user is not the same as the initial user",
 		)
 	}
+	// Login
 	_, success, err := Login(
 		ctx,
 		db,
@@ -96,7 +104,7 @@ func TestUserCRUD(t *testing.T) {
 			"login attempt failed, it is not expected to happen",
 		)
 	}
-	_, success, err = Login(
+	user, success, err := Login(
 		ctx,
 		db,
 		nil,
@@ -130,8 +138,10 @@ func TestUserCRUD(t *testing.T) {
 		nil,
 		password,
 	)
-	if err != nil {
-		t.Error(err)
+	if err == nil {
+		t.Error(
+			"expected to crush here",
+		)
 	}
 	if success {
 		t.Error(
@@ -145,12 +155,30 @@ func TestUserCRUD(t *testing.T) {
 		&userName,
 		password,
 	)
-	if err != nil {
-		t.Error(err)
+	if err == nil {
+		t.Error(
+			"expected to crush here",
+		)
 	}
 	if success {
 		t.Error(
 			"it is supposed to fail when logging in",
 		)
+	}
+	if user == nil {
+		t.Error(
+			"a nil user is returned",
+		)
+	}
+	token := uuid.NewString()
+	err = UploadLoginToken(
+		ctx,
+		client,
+		token,
+		user.UserID,
+		5*time.Minute,
+	)
+	if err != nil {
+		t.Error(err)
 	}
 }

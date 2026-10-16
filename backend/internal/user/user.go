@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
@@ -63,15 +64,15 @@ func HasUser(
 	db *gorm.DB,
 	userID string,
 ) (bool, error) {
-	users, err := gorm.G[*User](db).Where(
+	user, err := gorm.G[*User](db).Where(
 		&User{
 			UserID: userID,
 		},
-	).Find(ctx)
+	).First(ctx)
 	if err != nil {
 		return false, err
 	}
-	if len(users) == 0 {
+	if user == nil {
 		return false, nil
 	}
 	return true, nil
@@ -114,6 +115,52 @@ func GetUser(
 	return user, nil
 }
 
+// UploadLoginToken uploads login token
+func UploadLoginToken(
+	ctx context.Context,
+	client *redis.Client,
+	loginToken string,
+	userID string,
+	expireDuration time.Duration,
+) error {
+	_, err := client.Set(
+		ctx,
+		loginToken,
+		userID,
+		expireDuration,
+	).Result()
+	return err
+}
+
+// VerifyLoginToken checks if login token exists
+func VerifyLoginToken(
+	ctx context.Context,
+	client *redis.Client,
+	db *gorm.DB,
+	loginToken string,
+) (*User, bool, error) {
+	userID, err := client.Get(
+		ctx,
+		loginToken,
+	).Result()
+	if err != nil {
+		return nil, false, err
+	}
+	user, err := gorm.G[*User](db).Where(
+		&User{
+			UserID: userID,
+		},
+	).First(ctx)
+	if err != nil {
+		return user, false, err
+	}
+	result := true
+	if user == nil {
+		result = false
+	}
+	return user, result, nil
+}
+
 // Login manages the login
 func Login(
 	ctx context.Context,
@@ -132,26 +179,26 @@ func Login(
 				UserName: *userName,
 				Password: password,
 			},
-		).Find(ctx)
+		).First(ctx)
 		if err != nil {
 			return nil, false, err
 		}
-		if len(user) == 0 {
+		if user == nil {
 			return nil, false, nil
 		}
-		return user[0], true, nil
+		return user, true, nil
 	}
 	user, err := gorm.G[*User](db).Where(
 		&User{
 			Email:    *email,
 			Password: password,
 		},
-	).Find(ctx)
+	).First(ctx)
 	if err != nil {
 		return nil, false, err
 	}
-	if len(user) == 0 {
+	if user == nil {
 		return nil, false, nil
 	}
-	return user[0], true, nil
+	return user, true, nil
 }

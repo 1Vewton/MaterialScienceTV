@@ -17,6 +17,7 @@ type config struct {
 	redisMinRetryBackoff *int
 	redisMaxRetryBackoff *int
 	tmpUserLifetime      *int
+	loginTokenExpireTime *int
 	databaseType         *databasetype.DBType
 }
 
@@ -119,11 +120,20 @@ func (cfg *config) GetRedisMinRetryBackOff() (int, error) {
 	)
 }
 
-// GetTmpUserLifetime gets the min retry backoff for the Redis
+// GetTmpUserLifetime gets the tmp user lifetime in minutes
 func (cfg *config) GetTmpUserLifetime() (int, error) {
 	return SetConfigInteger(
 		"TMP_USER_LIFETIME",
 		10,
 		&cfg.tmpUserLifetime,
+	)
+}
+
+// GetLoginTokenExpireTime gets the expire time for login token in minutes
+func (cfg *config) GetLoginTokenExpireTime() (int, error) {
+	return SetConfigInteger(
+		"LOGIN_TOKEN_EXPIRE_TIME",
+		24*60,
+		&cfg.loginTokenExpireTime,
 	)
 }
