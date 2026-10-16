@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/1Vewton/MaterialScienceTV/backend/pkg/security"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
@@ -14,7 +15,8 @@ type User struct {
 	gorm.Model
 	UserID       string `gorm:"primaryKey"`
 	UserName     string
-	Password     string
+	HashValue    string
+	Salt         string
 	Email        string
 	RegisteredAt time.Time
 }
@@ -25,7 +27,6 @@ func (user *User) Equals(
 ) bool {
 	return user.UserID == another.UserID &&
 		user.UserName == another.UserName &&
-		user.Password == another.Password &&
 		user.Email == another.Email
 }
 
@@ -35,14 +36,23 @@ func NewUser(
 	password string,
 	email string,
 	id string,
-) *User {
+) (*User, error) {
+	saltValue, err := security.GenerateSalt()
+	if err != nil {
+		return nil, err
+	}
+	hash := security.ToHash(
+		password,
+		saltValue,
+	)
 	return &User{
 		UserID:       id,
 		UserName:     userName,
-		Password:     password,
+		HashValue:    hash,
+		Salt:         saltValue,
 		Email:        email,
 		RegisteredAt: time.Now(),
-	}
+	}, nil
 }
 
 // AddUser adds new user
@@ -169,6 +179,7 @@ func Login(
 	email *string,
 	password string,
 ) (*User, bool, error) {
+	var mainUser *User
 	if userName == nil && email == nil {
 		return nil, false, errors.New(
 			"you must fill one of the fields in userName or email",
@@ -177,7 +188,6 @@ func Login(
 		user, err := gorm.G[*User](db).Where(
 			&User{
 				UserName: *userName,
-				Password: password,
 			},
 		).First(ctx)
 		if err != nil {
@@ -186,19 +196,25 @@ func Login(
 		if user == nil {
 			return nil, false, nil
 		}
-		return user, true, nil
+		mainUser = user
+	} else {
+		user, err := gorm.G[*User](db).Where(
+			&User{
+				Email: *email,
+			},
+		).First(ctx)
+		if err != nil {
+			return nil, false, err
+		}
+		if user == nil {
+			return nil, false, nil
+		}
+		mainUser = user
 	}
-	user, err := gorm.G[*User](db).Where(
-		&User{
-			Email:    *email,
-			Password: password,
-		},
-	).First(ctx)
-	if err != nil {
-		return nil, false, err
-	}
-	if user == nil {
-		return nil, false, nil
-	}
-	return user, true, nil
+	isLoggedIn := security.ComparePassword(
+		password,
+		mainUser.Salt,
+		mainUser.HashValue,
+	)
+	return mainUser, isLoggedIn, nil
 }

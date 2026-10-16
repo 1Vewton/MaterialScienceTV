@@ -31,12 +31,15 @@ func TestUserCRUD(t *testing.T) {
 	userName := "114514"
 	password := "abc114514"
 	email := "114514@acceed.com"
-	initialUser := NewUser(
+	initialUser, err := NewUser(
 		userName,
 		password,
 		email,
 		id,
 	)
+	if err != nil {
+		t.Error(err)
+	}
 	err = AddUser(
 		ctx,
 		db,
@@ -180,5 +183,25 @@ func TestUserCRUD(t *testing.T) {
 	)
 	if err != nil {
 		t.Error(err)
+	}
+	fetchedUser, verified, err := VerifyLoginToken(
+		ctx,
+		client,
+		db,
+		token,
+	)
+	if err != nil {
+		t.Error(err)
+	}
+	if !fetchedUser.Equals(user) {
+		t.Error(
+			"the user data fetched is not equal to the original user",
+		)
+	}
+	if !verified {
+		t.Errorf(
+			"cannot verify %s",
+			token,
+		)
 	}
 }

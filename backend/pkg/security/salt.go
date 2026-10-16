@@ -33,3 +33,13 @@ func ToHash(
 	)
 	return result
 }
+
+// ComparePassword compares the hash value and password get
+func ComparePassword(
+	password string,
+	salt string,
+	storedHash string,
+) bool {
+	hashValue := ToHash(password, salt)
+	return hashValue == storedHash
+}

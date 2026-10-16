@@ -5,16 +5,18 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/1Vewton/MaterialScienceTV/backend/pkg/security"
 	"github.com/redis/go-redis/v9"
 )
 
 // TmpUser struct provides the user datamodel for temporarily storing in redis
 type TmpUser struct {
-	UserID       string `redis:"user_id"`
-	UserName     string `redis:"user_name"`
-	Password     string `redis:"password"`
-	Email        string `redis:"email"`
-	RegisteredAt int64  `redis:"registered_at"`
+	UserID       string `json:"user_id"`
+	UserName     string `json:"user_name"`
+	HashValue    string `json:"hash_value"`
+	Salt         string `json:"salt"`
+	Email        string `json:"email"`
+	RegisteredAt int64  `json:"registered_at"`
 }
 
 // NewTmpUser creates new tmp user
@@ -23,14 +25,23 @@ func NewTmpUser(
 	userName string,
 	password string,
 	email string,
-) *TmpUser {
+) (*TmpUser, error) {
+	saltValue, err := security.GenerateSalt()
+	if err != nil {
+		return nil, err
+	}
+	hash := security.ToHash(
+		password,
+		saltValue,
+	)
 	return &TmpUser{
 		UserID:       userID,
 		UserName:     userName,
-		Password:     password,
+		Salt:         saltValue,
+		HashValue:    hash,
 		Email:        email,
 		RegisteredAt: time.Now().UnixNano(),
-	}
+	}, nil
 }
 
 // UploadToRedis uploads tmp user to redis.
@@ -86,17 +97,17 @@ func (user *TmpUser) Equals(
 	another *TmpUser,
 ) bool {
 	return user.Email == another.Email &&
-		user.Password == another.Password &&
 		user.RegisteredAt == another.RegisteredAt
 }
 
 // ToUserData converts tmp user to user data that stores in the database
 func (user *TmpUser) ToUserData() *User {
 	newUserData := &User{
-		UserID:   user.UserID,
-		UserName: user.UserName,
-		Password: user.Password,
-		Email:    user.Email,
+		UserID:    user.UserID,
+		UserName:  user.UserName,
+		HashValue: user.HashValue,
+		Salt:      user.Salt,
+		Email:     user.Email,
 		RegisteredAt: time.Unix(
 			0,
 			user.RegisteredAt,

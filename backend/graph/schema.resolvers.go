@@ -76,12 +76,17 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 	// New tmp user
 	token := redismanager.NewToken("register")
 	newUserID := uuid.NewString()
-	newTmpUser := user.NewTmpUser(
+	newTmpUser, err := user.NewTmpUser(
 		newUserID,
 		input.UserName,
 		input.Password,
 		input.Email,
 	)
+	if err != nil {
+		return &model.Info{
+			Success: false,
+		}, err
+	}
 	userLifetime, err := config.Config.GetTmpUserLifetime()
 	if err != nil {
 		return &model.Info{

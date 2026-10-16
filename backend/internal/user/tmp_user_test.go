@@ -20,13 +20,16 @@ func TestUploadAndFetch(
 		"",
 	).ToClient()
 	id := uuid.NewString()
-	testUser := NewTmpUser(
+	testUser, err := NewTmpUser(
 		id,
 		"test",
 		"A114514",
 		"@gmail.com",
 	)
-	err := testUser.UploadToRedis(
+	if err != nil {
+		t.Error(err)
+	}
+	err = testUser.UploadToRedis(
 		ctx,
 		testClient,
 		id,
