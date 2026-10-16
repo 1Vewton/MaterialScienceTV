@@ -29,9 +29,9 @@ func TestTimeSetting(t *testing.T) {
 		"test",
 	)
 	newTodo2.SetDueDateByTimestamp(
-		testTime.Unix(),
+		testTime.UnixNano(),
 	)
-	if newTodo.DueDate != newTodo2.DueDate {
+	if !newTodo.DueDate.Equal(newTodo2.DueDate) {
 		t.Errorf(
 			"newTodo: %s, newTodo2: %s",
 			newTodo.DueDate.UTC().String(),
