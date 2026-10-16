@@ -18,16 +18,23 @@ type Todo struct {
 	Done    bool
 }
 
+// Equals checks if one todo is the same as another
+func (todo *Todo) Equals(
+	another *Todo,
+) bool {
+	return todo.TodoID == another.TodoID
+}
+
 // NewTodo creates new todo
 func NewTodo(
-	todoId string,
-	userId string,
+	todoID string,
+	userID string,
 	text string,
 ) *Todo {
 	return &Todo{
 		Done:   false,
-		UserID: userId,
-		TodoID: todoId,
+		UserID: userID,
+		TodoID: todoID,
 		Text:   text,
 	}
 }
@@ -68,11 +75,11 @@ func SaveTodo(
 func HasTodo(
 	ctx context.Context,
 	db *gorm.DB,
-	todoId string,
+	todoID string,
 ) (bool, error) {
 	todos, err := gorm.G[*Todo](db).Where(
 		&Todo{
-			TodoID: todoId,
+			TodoID: todoID,
 		},
 	).Find(ctx)
 	if err != nil {
@@ -88,16 +95,16 @@ func HasTodo(
 func GetTodo(
 	ctx context.Context,
 	db *gorm.DB,
-	todoId string,
+	todoID string,
 ) (*Todo, error) {
 	HasTodo(
 		ctx,
 		db,
-		todoId,
+		todoID,
 	)
 	todo, err := gorm.G[*Todo](db).Where(
 		&Todo{
-			TodoID: todoId,
+			TodoID: todoID,
 		},
 	).First(ctx)
 	if err != nil {
@@ -106,7 +113,7 @@ func GetTodo(
 	if todo == nil {
 		return nil, fmt.Errorf(
 			"todo with id %s does not exists",
-			todoId,
+			todoID,
 		)
 	}
 	return nil, nil
