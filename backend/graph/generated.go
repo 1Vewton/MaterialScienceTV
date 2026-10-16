@@ -65,10 +65,11 @@ type ComplexityRoot struct {
 	}
 
 	Todo struct {
-		Done    func(childComplexity int) int
-		ID      func(childComplexity int) int
-		OwnerID func(childComplexity int) int
-		Text    func(childComplexity int) int
+		Done                 func(childComplexity int) int
+		DueDateUnixTimestamp func(childComplexity int) int
+		ID                   func(childComplexity int) int
+		Text                 func(childComplexity int) int
+		UserID               func(childComplexity int) int
 	}
 
 	User struct {
@@ -209,24 +210,30 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Todo.Done(childComplexity), true
+	case "Todo.dueDateUnixTimestamp":
+		if e.ComplexityRoot.Todo.DueDateUnixTimestamp == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Todo.DueDateUnixTimestamp(childComplexity), true
 	case "Todo.id":
 		if e.ComplexityRoot.Todo.ID == nil {
 			break
 		}
 
 		return e.ComplexityRoot.Todo.ID(childComplexity), true
-	case "Todo.ownerID":
-		if e.ComplexityRoot.Todo.OwnerID == nil {
-			break
-		}
-
-		return e.ComplexityRoot.Todo.OwnerID(childComplexity), true
 	case "Todo.text":
 		if e.ComplexityRoot.Todo.Text == nil {
 			break
 		}
 
 		return e.ComplexityRoot.Todo.Text(childComplexity), true
+	case "Todo.userID":
+		if e.ComplexityRoot.Todo.UserID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Todo.UserID(childComplexity), true
 
 	case "User.email":
 		if e.ComplexityRoot.User.Email == nil {
@@ -398,8 +405,10 @@ func (ec *executionContext) childFields_Todo(ctx context.Context, field graphql.
 		return ec.fieldContext_Todo_text(ctx, field)
 	case "done":
 		return ec.fieldContext_Todo_done(ctx, field)
-	case "ownerID":
-		return ec.fieldContext_Todo_ownerID(ctx, field)
+	case "userID":
+		return ec.fieldContext_Todo_userID(ctx, field)
+	case "dueDateUnixTimestamp":
+		return ec.fieldContext_Todo_dueDateUnixTimestamp(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type Todo", field.Name)
 }
@@ -1147,16 +1156,16 @@ func (ec *executionContext) fieldContext_Todo_done(_ context.Context, field grap
 	return graphql.NewScalarFieldContext("Todo", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
-func (ec *executionContext) _Todo_ownerID(ctx context.Context, field graphql.CollectedField, obj *model.Todo) (ret graphql.Marshaler) {
+func (ec *executionContext) _Todo_userID(ctx context.Context, field graphql.CollectedField, obj *model.Todo) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
 		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.fieldContext_Todo_ownerID(ctx, field)
+			return ec.fieldContext_Todo_userID(ctx, field)
 		},
 		func(ctx context.Context) (any, error) {
-			return obj.OwnerID, nil
+			return obj.UserID, nil
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
@@ -1166,8 +1175,31 @@ func (ec *executionContext) _Todo_ownerID(ctx context.Context, field graphql.Col
 		true,
 	)
 }
-func (ec *executionContext) fieldContext_Todo_ownerID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Todo_userID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("Todo", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Todo_dueDateUnixTimestamp(ctx context.Context, field graphql.CollectedField, obj *model.Todo) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Todo_dueDateUnixTimestamp(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.DueDateUnixTimestamp, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int32) graphql.Marshaler {
+			return ec.marshalNInt2int32(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Todo_dueDateUnixTimestamp(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Todo", field, false, false, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _User_userID(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
@@ -2376,7 +2408,7 @@ func (ec *executionContext) unmarshalInputNewTodo(ctx context.Context, obj any) 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"text", "userId"}
+	fieldsInOrder := [...]string{"text", "userId", "dueDateUnixTimestamp"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -2397,6 +2429,13 @@ func (ec *executionContext) unmarshalInputNewTodo(ctx context.Context, obj any) 
 				return it, err
 			}
 			it.UserID = data
+		case "dueDateUnixTimestamp":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dueDateUnixTimestamp"))
+			data, err := ec.unmarshalNInt2int32(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DueDateUnixTimestamp = data
 		}
 	}
 	return it, nil
@@ -2776,8 +2815,13 @@ func (ec *executionContext) _Todo(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "ownerID":
-			out.Values[i] = ec._Todo_ownerID(ctx, field, obj)
+		case "userID":
+			out.Values[i] = ec._Todo_userID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "dueDateUnixTimestamp":
+			out.Values[i] = ec._Todo_dueDateUnixTimestamp(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -3275,6 +3319,22 @@ func (ec *executionContext) marshalNInfo2ᚖgithubᚗcomᚋ1VewtonᚋMaterialSci
 		return graphql.Null
 	}
 	return ec._Info(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNInt2int32(ctx context.Context, v any) (int32, error) {
+	res, err := graphql.UnmarshalInt32(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInt2int32(ctx context.Context, sel ast.SelectionSet, v int32) graphql.Marshaler {
+	_ = sel
+	res := graphql.MarshalInt32(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) marshalNLoginInfo2githubᚗcomᚋ1VewtonᚋMaterialScienceTVᚋbackendᚋgraphᚋmodelᚐLoginInfo(ctx context.Context, sel ast.SelectionSet, v model.LoginInfo) graphql.Marshaler {

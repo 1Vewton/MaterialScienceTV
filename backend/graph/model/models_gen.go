@@ -22,8 +22,9 @@ type Mutation struct {
 }
 
 type NewTodo struct {
-	Text   string `json:"text"`
-	UserID string `json:"userId"`
+	Text                 string `json:"text"`
+	UserID               string `json:"userId"`
+	DueDateUnixTimestamp int32  `json:"dueDateUnixTimestamp"`
 }
 
 type NewUser struct {
@@ -42,10 +43,11 @@ type ReturnUser struct {
 }
 
 type Todo struct {
-	ID      string `json:"id"`
-	Text    string `json:"text"`
-	Done    bool   `json:"done"`
-	OwnerID string `json:"ownerID"`
+	ID                   string `json:"id"`
+	Text                 string `json:"text"`
+	Done                 bool   `json:"done"`
+	UserID               string `json:"userID"`
+	DueDateUnixTimestamp int32  `json:"dueDateUnixTimestamp"`
 }
 
 type User struct {

@@ -6,7 +6,8 @@ type Todo {
   id: String!
   text: String!
   done: Boolean!
-  ownerID: String!
+  userID: String!
+  dueDateUnixTimestamp: Int!
 }
 
 # User defines a single user
@@ -40,6 +41,7 @@ type LoginInfo{
 input NewTodo {
   text: String!
   userId: String!
+  dueDateUnixTimestamp: Int!
 }
 
 # NewUser defines the schema for creating user
