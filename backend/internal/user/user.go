@@ -74,15 +74,15 @@ func HasUser(
 	db *gorm.DB,
 	userID string,
 ) (bool, error) {
-	user, err := gorm.G[*User](db).Where(
+	users, err := gorm.G[*User](db).Where(
 		&User{
 			UserID: userID,
 		},
-	).First(ctx)
+	).Find(ctx)
 	if err != nil {
 		return false, err
 	}
-	if user == nil {
+	if len(users) == 0 {
 		return false, nil
 	}
 	return true, nil
@@ -217,4 +217,18 @@ func Login(
 		mainUser.HashValue,
 	)
 	return mainUser, isLoggedIn, nil
+}
+
+// DeleteUser deletes the user
+func DeleteUser(
+	ctx context.Context,
+	db *gorm.DB,
+	userID string,
+) error {
+	_, err := gorm.G[*User](db).Where(
+		&User{
+			UserID: userID,
+		},
+	).Delete(ctx)
+	return err
 }

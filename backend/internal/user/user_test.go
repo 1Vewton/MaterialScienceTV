@@ -19,13 +19,13 @@ func TestUserCRUD(t *testing.T) {
 		":memory:",
 		&User{},
 	)
+	if err != nil {
+		t.Error(err)
+	}
 	client := redismanager.NewRedisConfig(
 		"localhost:6379",
 		"",
 	).ToClient()
-	if err != nil {
-		t.Error(err)
-	}
 	// CRUD
 	id := uuid.NewString()
 	userName := "114514"
@@ -202,6 +202,71 @@ func TestUserCRUD(t *testing.T) {
 		t.Errorf(
 			"cannot verify %s",
 			token,
+		)
+	}
+}
+
+// TestUserDeletion tests the deletion of user
+func TestUserDeletion(t *testing.T) {
+	t.Parallel()
+	ctx := t.Context()
+	userID := uuid.NewString()
+	db, err := database.InitDataBase(
+		databasetype.Sqlite,
+		":memory:",
+		&User{},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	newUser, err := NewUser(
+		"abc114514",
+		"abc@114514",
+		"12345@?.com",
+		userID,
+	)
+	err = AddUser(
+		ctx,
+		db,
+		newUser,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	userExists, err := HasUser(
+		ctx,
+		db,
+		userID,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !userExists {
+		t.Fatal(
+			"expected use to exists",
+		)
+	}
+	err = DeleteUser(
+		ctx,
+		db,
+		userID,
+	)
+	if err != nil {
+		t.Fatal(
+			err,
+		)
+	}
+	userExists, err = HasUser(
+		ctx,
+		db,
+		userID,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if userExists {
+		t.Fatal(
+			"the data ought to be deleted",
 		)
 	}
 }
