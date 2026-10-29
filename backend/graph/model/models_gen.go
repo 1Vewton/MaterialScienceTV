@@ -9,6 +9,7 @@ type Info struct {
 
 type LoginInfo struct {
 	Success bool        `json:"success"`
+	Message string      `json:"message"`
 	Info    *ReturnUser `json:"info,omitempty"`
 }
 

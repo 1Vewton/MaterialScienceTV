@@ -44,6 +44,7 @@ type ComplexityRoot struct {
 
 	LoginInfo struct {
 		Info    func(childComplexity int) int
+		Message func(childComplexity int) int
 		Success func(childComplexity int) int
 	}
 
@@ -54,8 +55,9 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Login func(childComplexity int, input *model.LoginUserForm) int
-		Todos func(childComplexity int) int
+		DeleteAccount func(childComplexity int) int
+		Login         func(childComplexity int, input *model.LoginUserForm) int
+		Todos         func(childComplexity int) int
 	}
 
 	ReturnUser struct {
@@ -92,6 +94,7 @@ type MutationResolver interface {
 type QueryResolver interface {
 	Todos(ctx context.Context) ([]*model.Todo, error)
 	Login(ctx context.Context, input *model.LoginUserForm) (*model.LoginInfo, error)
+	DeleteAccount(ctx context.Context) (*model.Info, error)
 }
 
 // endregion ************************** generated!.gotpl **************************
@@ -131,6 +134,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.LoginInfo.Info(childComplexity), true
+	case "LoginInfo.message":
+		if e.ComplexityRoot.LoginInfo.Message == nil {
+			break
+		}
+
+		return e.ComplexityRoot.LoginInfo.Message(childComplexity), true
 	case "LoginInfo.success":
 		if e.ComplexityRoot.LoginInfo.Success == nil {
 			break
@@ -166,6 +175,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.VerifyUser(childComplexity), true
+
+	case "Query.deleteAccount":
+		if e.ComplexityRoot.Query.DeleteAccount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Query.DeleteAccount(childComplexity), true
 
 	case "Query.login":
 		if e.ComplexityRoot.Query.Login == nil {
@@ -379,6 +395,8 @@ func (ec *executionContext) childFields_LoginInfo(ctx context.Context, field gra
 	switch field.Name {
 	case "success":
 		return ec.fieldContext_LoginInfo_success(ctx, field)
+	case "message":
+		return ec.fieldContext_LoginInfo_message(ctx, field)
 	case "info":
 		return ec.fieldContext_LoginInfo_info(ctx, field)
 	}
@@ -714,6 +732,29 @@ func (ec *executionContext) fieldContext_LoginInfo_success(_ context.Context, fi
 	return graphql.NewScalarFieldContext("LoginInfo", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
+func (ec *executionContext) _LoginInfo_message(ctx context.Context, field graphql.CollectedField, obj *model.LoginInfo) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_LoginInfo_message(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Message, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_LoginInfo_message(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("LoginInfo", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
 func (ec *executionContext) _LoginInfo_info(ctx context.Context, field graphql.CollectedField, obj *model.LoginInfo) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -938,6 +979,38 @@ func (ec *executionContext) fieldContext_Query_login(ctx context.Context, field 
 	if fc.Args, err = ec.field_Query_login_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_deleteAccount(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_deleteAccount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Query().DeleteAccount(ctx)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Info) graphql.Marshaler {
+			return ec.marshalNInfo2ᚖgithubᚗcomᚋ1VewtonᚋMaterialScienceTVᚋbackendᚋgraphᚋmodelᚐInfo(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_deleteAccount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Info(ctx, field)
+		},
 	}
 	return fc, nil
 }
@@ -2553,6 +2626,11 @@ func (ec *executionContext) _LoginInfo(ctx context.Context, sel ast.SelectionSet
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "message":
+			out.Values[i] = ec._LoginInfo_message(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "info":
 			out.Values[i] = ec._LoginInfo_info(ctx, field, obj)
 			if out.Values[i] == graphql.RequiredNull {
@@ -2693,6 +2771,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_login(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "deleteAccount":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_deleteAccount(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}

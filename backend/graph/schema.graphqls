@@ -34,6 +34,7 @@ type ReturnUser{
 # LoginInfo defines the schema for returing user info when logged in
 type LoginInfo{
   success: Boolean!
+  message: String!
   info: ReturnUser
 }
 
@@ -74,4 +75,6 @@ type Query {
   todos: [Todo!]!
   # login logins the system
   login(input: LoginUserForm): LoginInfo!
+  # deleteAccount deletes the account
+  deleteAccount: Info!
 }

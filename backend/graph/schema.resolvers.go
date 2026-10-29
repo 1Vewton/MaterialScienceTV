@@ -35,6 +35,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 	if err != nil {
 		return &model.Info{
 			Success: false,
+			Message: err.Error(),
 		}, err
 	}
 	request, err := cookie.GetRequestFromContext(
@@ -43,6 +44,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 	if err != nil {
 		return &model.Info{
 			Success: false,
+			Message: err.Error(),
 		}, err
 	}
 	_, err = request.Cookie(cookie.RegisterTokenKey)
@@ -51,12 +53,14 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 		if err == nil {
 			return &model.Info{
 					Success: false,
+					Message: "you already submitted a register request",
 				}, errors.New(
 					"you already submitted a register request",
 				)
 		}
 		return &model.Info{
 			Success: false,
+			Message: err.Error(),
 		}, err
 	}
 	// Checks if there exists a username
@@ -68,6 +72,10 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 	if exists {
 		return &model.Info{
 				Success: false,
+				Message: fmt.Sprintf(
+					"user with username %s already exists",
+					input.UserName,
+				),
 			}, fmt.Errorf(
 				"user with username %s already exists",
 				input.UserName,
@@ -85,12 +93,14 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 	if err != nil {
 		return &model.Info{
 			Success: false,
+			Message: err.Error(),
 		}, err
 	}
 	userLifetime, err := config.Config.GetTmpUserLifetime()
 	if err != nil {
 		return &model.Info{
 			Success: false,
+			Message: err.Error(),
 		}, err
 	}
 	err = newTmpUser.UploadToRedis(
@@ -102,6 +112,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 	if err != nil {
 		return &model.Info{
 			Success: false,
+			Message: err.Error(),
 		}, err
 	}
 	// Set cookie
@@ -128,6 +139,7 @@ func (r *mutationResolver) VerifyUser(ctx context.Context) (*model.Info, error) 
 	if err != nil {
 		return &model.Info{
 			Success: false,
+			Message: err.Error(),
 		}, err
 	}
 	requestCookie, err := request.Cookie(cookie.RegisterTokenKey)
@@ -135,6 +147,7 @@ func (r *mutationResolver) VerifyUser(ctx context.Context) (*model.Info, error) 
 		if err == http.ErrNoCookie {
 			return &model.Info{
 					Success: false,
+					Message: "session expired or not exists",
 				}, errors.New(
 					"session expired or not exists",
 				)
@@ -152,6 +165,7 @@ func (r *mutationResolver) VerifyUser(ctx context.Context) (*model.Info, error) 
 	if err != nil {
 		return &model.Info{
 			Success: false,
+			Message: err.Error(),
 		}, err
 	}
 	// Checks if there exists a username
@@ -163,6 +177,10 @@ func (r *mutationResolver) VerifyUser(ctx context.Context) (*model.Info, error) 
 	if exists {
 		return &model.Info{
 				Success: false,
+				Message: fmt.Sprintf(
+					"user with username %s already exists",
+					tmpUser.UserName,
+				),
 			}, fmt.Errorf(
 				"user with username %s already exists",
 				tmpUser.UserName,
@@ -179,6 +197,10 @@ func (r *mutationResolver) VerifyUser(ctx context.Context) (*model.Info, error) 
 	if exists {
 		return &model.Info{
 				Success: false,
+				Message: fmt.Sprintf(
+					"user with id %s already exists",
+					realUser.UserID,
+				),
 			}, fmt.Errorf(
 				"user with id %s already exists",
 				realUser.UserID,
@@ -192,11 +214,12 @@ func (r *mutationResolver) VerifyUser(ctx context.Context) (*model.Info, error) 
 	if err != nil {
 		return &model.Info{
 			Success: false,
+			Message: err.Error(),
 		}, err
 	}
 	return &model.Info{
 		Success: true,
-	}, err
+	}, nil
 }
 
 // Todos is the resolver for the todos field.
@@ -212,19 +235,20 @@ func (r *queryResolver) Login(ctx context.Context, input *model.LoginUserForm) (
 	if err != nil {
 		return &model.LoginInfo{
 			Success: false,
+			Message: err.Error(),
 		}, err
 	}
 	_, err = request.Cookie(cookie.LoginTokenKey)
 	if err == nil {
 		return &model.LoginInfo{
-				Success: false,
-			}, errors.New(
-				"you already logged in",
-			)
+			Success: false,
+			Message: "you already logged in",
+		}, nil
 	}
 	if err != http.ErrNoCookie {
 		return &model.LoginInfo{
 			Success: false,
+			Message: err.Error(),
 		}, err
 	}
 	loginUserData, success, err := user.Login(
@@ -237,11 +261,13 @@ func (r *queryResolver) Login(ctx context.Context, input *model.LoginUserForm) (
 	if err != nil {
 		return &model.LoginInfo{
 			Success: false,
+			Message: err.Error(),
 		}, err
 	}
 	if !success {
 		return &model.LoginInfo{
 				Success: false,
+				Message: "user does not exists",
 			}, fmt.Errorf(
 				"user does not exists",
 			)
@@ -253,6 +279,7 @@ func (r *queryResolver) Login(ctx context.Context, input *model.LoginUserForm) (
 	if err != nil {
 		return &model.LoginInfo{
 			Success: false,
+			Message: err.Error(),
 		}, err
 	}
 	err = user.UploadLoginToken(
@@ -265,6 +292,7 @@ func (r *queryResolver) Login(ctx context.Context, input *model.LoginUserForm) (
 	if err != nil {
 		return &model.LoginInfo{
 			Success: false,
+			Message: err.Error(),
 		}, err
 	}
 	// Set Cookie
@@ -274,6 +302,7 @@ func (r *queryResolver) Login(ctx context.Context, input *model.LoginUserForm) (
 	if err != nil {
 		return &model.LoginInfo{
 			Success: false,
+			Message: err.Error(),
 		}, err
 	}
 	cookieLogin := http.Cookie{
@@ -292,6 +321,67 @@ func (r *queryResolver) Login(ctx context.Context, input *model.LoginUserForm) (
 			UserID:   loginUserData.UserID,
 			Email:    loginUserData.Email,
 		},
+	}, nil
+}
+
+// DeleteAccount is the resolver for the deleteAccount field.
+func (r *queryResolver) DeleteAccount(ctx context.Context) (*model.Info, error) {
+	request, err := cookie.GetRequestFromContext(
+		ctx,
+	)
+	if err != nil {
+		return &model.Info{
+			Success: true,
+			Message: err.Error(),
+		}, err
+	}
+	requestCookie, err := request.Cookie(
+		cookie.LoginTokenKey,
+	)
+	if err != nil {
+		if err != http.ErrNoCookie {
+			return &model.Info{
+				Success: false,
+				Message: err.Error(),
+			}, nil
+		}
+		return &model.Info{
+			Success: false,
+			Message: err.Error(),
+		}, err
+	}
+	token := requestCookie.Value
+	userVerified, exists, err := user.VerifyLoginToken(
+		ctx,
+		redismanager.RedisClient,
+		database.DataBase,
+		token,
+	)
+	if err != nil {
+		return &model.Info{
+			Success: false,
+			Message: err.Error(),
+		}, err
+	}
+	if !exists {
+		return &model.Info{
+			Success: false,
+			Message: "the session is not valid or expired or user invalid",
+		}, nil
+	}
+	err = user.DeleteUser(
+		ctx,
+		database.DataBase,
+		userVerified.UserID,
+	)
+	if err != nil {
+		return &model.Info{
+			Success: false,
+			Message: err.Error(),
+		}, err
+	}
+	return &model.Info{
+		Success: true,
 	}, nil
 }
 
