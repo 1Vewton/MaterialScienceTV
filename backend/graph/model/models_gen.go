@@ -2,6 +2,16 @@
 
 package model
 
+type GetTodoInfo struct {
+	Success bool    `json:"success"`
+	Message string  `json:"message"`
+	Todos   []*Todo `json:"todos,omitempty"`
+}
+
+type GetTodoParam struct {
+	ShowOnlyFutureTodos bool `json:"showOnlyFutureTodos"`
+}
+
 type Info struct {
 	Success bool   `json:"success"`
 	Message string `json:"message"`
@@ -24,7 +34,6 @@ type Mutation struct {
 
 type NewTodo struct {
 	Text                 string `json:"text"`
-	UserID               string `json:"userId"`
 	DueDateUnixTimestamp int32  `json:"dueDateUnixTimestamp"`
 }
 

@@ -38,6 +38,20 @@ func NewTodo(
 	userID string,
 	text string,
 ) (*Todo, error) {
+	hasUser, err := user.HasUser(
+		ctx,
+		db,
+		userID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	if !hasUser {
+		return nil, fmt.Errorf(
+			"user with id %s does not exists",
+			userID,
+		)
+	}
 	return &Todo{
 		Done:     false,
 		MasterID: userID,

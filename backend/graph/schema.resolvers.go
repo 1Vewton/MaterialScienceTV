@@ -16,8 +16,10 @@ import (
 	"github.com/1Vewton/MaterialScienceTV/backend/internal/cookie"
 	"github.com/1Vewton/MaterialScienceTV/backend/internal/database"
 	"github.com/1Vewton/MaterialScienceTV/backend/internal/database/redismanager"
+	"github.com/1Vewton/MaterialScienceTV/backend/internal/todos"
 	"github.com/1Vewton/MaterialScienceTV/backend/internal/user"
 	"github.com/1Vewton/MaterialScienceTV/backend/pkg/config"
+	"github.com/1Vewton/MaterialScienceTV/backend/pkg/ids"
 	"github.com/google/uuid"
 )
 
@@ -49,7 +51,8 @@ func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) 
 		}, err
 	}
 	token := requestCookie.Value
-	_, userExists, err := user.VerifyLoginToken(
+	// Validate user
+	fetchedUser, userExists, err := user.VerifyLoginToken(
 		ctx,
 		redismanager.RedisClient,
 		database.DataBase,
@@ -67,7 +70,105 @@ func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) 
 			Message: "the token points to a invalid user",
 		}, err
 	}
-	return nil, nil
+	// NewTodo
+	todoID := ids.NewUniqueString(
+		"todo",
+	)
+	newTodo, err := todos.NewTodo(
+		ctx,
+		database.DataBase,
+		todoID,
+		fetchedUser.UserID,
+		input.Text,
+	)
+	if err != nil {
+		return &model.Info{
+			Success: false,
+			Message: err.Error(),
+		}, err
+	}
+	err = todos.SaveTodo(
+		ctx,
+		database.DataBase,
+		newTodo,
+	)
+	if err != nil {
+		return &model.Info{
+			Success: false,
+			Message: err.Error(),
+		}, err
+	}
+	return &model.Info{
+		Success: true,
+		Message: "The todo is created successfully",
+	}, nil
+}
+
+// GetTodo is the resolver for the getTodo field.
+func (r *mutationResolver) GetTodo(ctx context.Context, input model.GetTodoParam) (*model.GetTodoInfo, error) {
+	// Get token stored in cookies
+	request, err := cookie.GetRequestFromContext(
+		ctx,
+	)
+	if err != nil {
+		return &model.GetTodoInfo{
+			Success: false,
+			Message: err.Error(),
+		}, err
+	}
+	requestCookie, err := request.Cookie(
+		cookie.LoginTokenKey,
+	)
+	if err != nil {
+		if err != http.ErrNoCookie {
+			return &model.GetTodoInfo{
+				Success: false,
+				Message: err.Error(),
+			}, nil
+		}
+		return &model.GetTodoInfo{
+			Success: false,
+			Message: err.Error(),
+		}, err
+	}
+	token := requestCookie.Value
+	// Validate user
+	verifiedUser, userExists, err := user.VerifyLoginToken(
+		ctx,
+		redismanager.RedisClient,
+		database.DataBase,
+		token,
+	)
+	if err != nil {
+		return &model.GetTodoInfo{
+			Success: false,
+			Message: err.Error(),
+		}, err
+	}
+	if !userExists {
+		return &model.GetTodoInfo{
+			Success: false,
+			Message: "the token points to a invalid user",
+		}, err
+	}
+	if input.ShowOnlyFutureTodos {
+		return nil, nil
+	}
+	_, err = todos.GetTodosByUser(
+		ctx,
+		database.DataBase,
+		verifiedUser.UserID,
+	)
+	if err != nil {
+		return &model.GetTodoInfo{
+			Success: false,
+			Message: err.Error(),
+		}, err
+	}
+	return &model.GetTodoInfo{
+		Success: true,
+		Message: "Successfully get the todos",
+	}, nil
 }
 
 // CreateUser is the resolver for the createUser field.
@@ -126,7 +227,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 		)
 	}
 	// New tmp user
-	token := redismanager.NewToken("register")
+	token := ids.NewUniqueString("register")
 	newUserID := uuid.NewString()
 	newTmpUser, err := user.NewTmpUser(
 		newUserID,
@@ -316,9 +417,7 @@ func (r *queryResolver) Login(ctx context.Context, input *model.LoginUserForm) (
 			"user does not exists",
 		)
 	}
-	token := redismanager.NewToken(
-		"login",
-	)
+	token := ids.NewUniqueString("login")
 	expireTime, err := config.Config.GetLoginTokenExpireTime()
 	if err != nil {
 		return &model.LoginInfo{

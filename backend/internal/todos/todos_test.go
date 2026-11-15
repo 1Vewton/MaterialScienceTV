@@ -25,6 +25,23 @@ func TestTimeSetting(t *testing.T) {
 	}
 	userID := uuid.NewString()
 	taskID := uuid.NewString()
+	newUser, err := user.NewUser(
+		"name1",
+		"abc@114514",
+		"1234@163.com",
+		userID,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = user.AddUser(
+		ctx,
+		db,
+		newUser,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
 	newTodo, err := NewTodo(
 		ctx,
 		db,
@@ -68,8 +85,9 @@ func TestTodosCRUD(t *testing.T) {
 	ctx := t.Context()
 	db, err := database.InitDataBase(
 		databasetype.Sqlite,
-		":memory:",
+		":memory:?_pragma=foreign_keys(1)",
 		&Todo{},
+		&user.User{},
 	)
 	if err != nil {
 		t.Error(err)
@@ -77,6 +95,23 @@ func TestTodosCRUD(t *testing.T) {
 	// Define experiment variables
 	userID := uuid.NewString()
 	taskID := uuid.NewString()
+	newUser, err := user.NewUser(
+		"name1",
+		"abc@114514",
+		"1234@163.com",
+		userID,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = user.AddUser(
+		ctx,
+		db,
+		newUser,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
 	newTodo, err := NewTodo(
 		ctx,
 		db,
@@ -139,6 +174,9 @@ func TestForeginKey(t *testing.T) {
 		"1234@163.com",
 		userID,
 	)
+	if err != nil {
+		t.Fatal(err)
+	}
 	err = user.AddUser(
 		ctx,
 		db,

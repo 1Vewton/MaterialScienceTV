@@ -12,6 +12,7 @@ import (
 	"github.com/1Vewton/MaterialScienceTV/backend/internal/database"
 	"github.com/1Vewton/MaterialScienceTV/backend/internal/database/redismanager"
 	"github.com/1Vewton/MaterialScienceTV/backend/internal/middlewares"
+	"github.com/1Vewton/MaterialScienceTV/backend/internal/todos"
 	"github.com/1Vewton/MaterialScienceTV/backend/internal/user"
 	"github.com/1Vewton/MaterialScienceTV/backend/pkg/config"
 	"github.com/1Vewton/MaterialScienceTV/backend/pkg/logger"
@@ -35,6 +36,7 @@ func init() {
 	resDB, err := database.InitDataBase(
 		config.Config.GetDatabaseType(),
 		config.Config.GetDatabaseURL(),
+		&todos.Todo{},
 		&user.User{},
 	)
 	database.DataBase = resDB

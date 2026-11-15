@@ -38,11 +38,22 @@ type LoginInfo{
   info: ReturnUser
 }
 
+# GetTodoInfo defines the info for getting todo
+type GetTodoInfo{
+  success: Boolean!
+  message: String!
+  todos: [Todo]
+}
+
 # NewTodo defines schema for creating todo
 input NewTodo {
   text: String!
-  userId: String!
   dueDateUnixTimestamp: Int!
+}
+
+# GetTodoParam defines param for getting todos
+input GetTodoParam{
+  showOnlyFutureTodos: Boolean!
 }
 
 # NewUser defines the schema for creating user
@@ -63,6 +74,8 @@ input LoginUserForm{
 type Mutation {
   # createTodo creates new todo
   createTodo(input: NewTodo!): Info!
+  # getTodo gets todo for user
+  getTodo(input: GetTodoParam!): GetTodoInfo!
   # createUser creates new user
   createUser(input: NewUser!): Info!
   # verifyUser verifies user
