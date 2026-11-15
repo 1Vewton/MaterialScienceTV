@@ -11,13 +11,12 @@ import (
 
 // Todo defines the todo for user
 type Todo struct {
-	gorm.Model
-	TodoID  string `gorm:"primaryKey"`
-	Text    string
-	DueDate time.Time
-	Done    bool
-	UserID  string
-	User    *user.User `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	TodoID   string `gorm:"primaryKey"`
+	Text     string
+	DueDate  time.Time
+	Done     bool
+	MasterID string
+	User     *user.User `gorm:"foreignkey:MasterID;references:UserID;constraint:OnDelete:CASCADE,OnUpdate:CASCADE;"`
 }
 
 // Equals checks if one todo is the same as another
@@ -25,7 +24,7 @@ func (todo *Todo) Equals(
 	another *Todo,
 ) bool {
 	return todo.TodoID == another.TodoID &&
-		todo.UserID == another.UserID &&
+		todo.MasterID == another.MasterID &&
 		todo.Text == another.Text &&
 		todo.DueDate.Equal(another.DueDate) &&
 		todo.Done == another.Done
@@ -33,16 +32,18 @@ func (todo *Todo) Equals(
 
 // NewTodo creates new todo
 func NewTodo(
+	ctx context.Context,
+	db *gorm.DB,
 	todoID string,
 	userID string,
 	text string,
-) *Todo {
+) (*Todo, error) {
 	return &Todo{
-		Done:   false,
-		UserID: userID,
-		TodoID: todoID,
-		Text:   text,
-	}
+		Done:     false,
+		MasterID: userID,
+		TodoID:   todoID,
+		Text:     text,
+	}, nil
 }
 
 // SetDueDateByTime sets due date by time.Time
@@ -131,7 +132,7 @@ func GetTodo(
 			todoID,
 		)
 	}
-	return nil, nil
+	return todo, nil
 }
 
 // GetTodosByUser gets todos by user id
@@ -156,7 +157,7 @@ func GetTodosByUser(
 	}
 	return gorm.G[*Todo](db).Where(
 		&Todo{
-			UserID: userID,
+			MasterID: userID,
 		},
 	).Find(ctx)
 }
@@ -170,8 +171,8 @@ func MarkTodoAsFinished(
 ) error {
 	_, err := gorm.G[*Todo](db).Where(
 		&Todo{
-			UserID: userID,
-			TodoID: todoID,
+			MasterID: userID,
+			TodoID:   todoID,
 		},
 	).Update(
 		ctx,
@@ -179,4 +180,31 @@ func MarkTodoAsFinished(
 		true,
 	)
 	return err
+}
+
+// GetTodosForRangeOfTime gets todos for a range of time about current time
+func GetTodosForRangeOfTime(
+	ctx context.Context,
+	db *gorm.DB,
+	userID string,
+	timeRangeInNanoSecond int64,
+) ([]*Todo, error) {
+	timeStampNow := time.Now().UnixNano()
+	resultTodo := []*Todo{}
+	todosFetched, err := GetTodosByUser(
+		ctx,
+		db,
+		userID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	for _, todo := range todosFetched {
+		dueDateTimeStamp := todo.DueDate.UnixNano()
+		if dueDateTimeStamp >= timeStampNow &&
+			dueDateTimeStamp <= timeStampNow+timeRangeInNanoSecond {
+			resultTodo = append(resultTodo, todo)
+		}
+	}
+	return resultTodo, nil
 }

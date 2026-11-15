@@ -23,7 +23,51 @@ import (
 
 // CreateTodo is the resolver for the createTodo field.
 func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (*model.Info, error) {
-	panic(fmt.Errorf("not implemented: CreateTodo - createTodo"))
+	// Get token stored in cookies
+	request, err := cookie.GetRequestFromContext(
+		ctx,
+	)
+	if err != nil {
+		return &model.Info{
+			Success: false,
+			Message: err.Error(),
+		}, err
+	}
+	requestCookie, err := request.Cookie(
+		cookie.LoginTokenKey,
+	)
+	if err != nil {
+		if err != http.ErrNoCookie {
+			return &model.Info{
+				Success: false,
+				Message: err.Error(),
+			}, nil
+		}
+		return &model.Info{
+			Success: false,
+			Message: err.Error(),
+		}, err
+	}
+	token := requestCookie.Value
+	_, userExists, err := user.VerifyLoginToken(
+		ctx,
+		redismanager.RedisClient,
+		database.DataBase,
+		token,
+	)
+	if err != nil {
+		return &model.Info{
+			Success: false,
+			Message: err.Error(),
+		}, err
+	}
+	if !userExists {
+		return &model.Info{
+			Success: false,
+			Message: "the token points to a invalid user",
+		}, err
+	}
+	return nil, nil
 }
 
 // CreateUser is the resolver for the createUser field.
@@ -52,11 +96,11 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 	if err != http.ErrNoCookie {
 		if err == nil {
 			return &model.Info{
-					Success: false,
-					Message: "you already submitted a register request",
-				}, errors.New(
-					"you already submitted a register request",
-				)
+				Success: false,
+				Message: "you already submitted a register request",
+			}, errors.New(
+				"you already submitted a register request",
+			)
 		}
 		return &model.Info{
 			Success: false,
@@ -71,15 +115,15 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 	)
 	if exists {
 		return &model.Info{
-				Success: false,
-				Message: fmt.Sprintf(
-					"user with username %s already exists",
-					input.UserName,
-				),
-			}, fmt.Errorf(
+			Success: false,
+			Message: fmt.Sprintf(
 				"user with username %s already exists",
 				input.UserName,
-			)
+			),
+		}, fmt.Errorf(
+			"user with username %s already exists",
+			input.UserName,
+		)
 	}
 	// New tmp user
 	token := redismanager.NewToken("register")
@@ -146,11 +190,11 @@ func (r *mutationResolver) VerifyUser(ctx context.Context) (*model.Info, error) 
 	if err != nil {
 		if err == http.ErrNoCookie {
 			return &model.Info{
-					Success: false,
-					Message: "session expired or not exists",
-				}, errors.New(
-					"session expired or not exists",
-				)
+				Success: false,
+				Message: "session expired or not exists",
+			}, errors.New(
+				"session expired or not exists",
+			)
 		}
 		return &model.Info{
 			Success: false,
@@ -176,15 +220,15 @@ func (r *mutationResolver) VerifyUser(ctx context.Context) (*model.Info, error) 
 	)
 	if exists {
 		return &model.Info{
-				Success: false,
-				Message: fmt.Sprintf(
-					"user with username %s already exists",
-					tmpUser.UserName,
-				),
-			}, fmt.Errorf(
+			Success: false,
+			Message: fmt.Sprintf(
 				"user with username %s already exists",
 				tmpUser.UserName,
-			)
+			),
+		}, fmt.Errorf(
+			"user with username %s already exists",
+			tmpUser.UserName,
+		)
 	}
 	// Stores user data to the tmpuser
 	realUser := tmpUser.ToUserData()
@@ -196,15 +240,15 @@ func (r *mutationResolver) VerifyUser(ctx context.Context) (*model.Info, error) 
 	)
 	if exists {
 		return &model.Info{
-				Success: false,
-				Message: fmt.Sprintf(
-					"user with id %s already exists",
-					realUser.UserID,
-				),
-			}, fmt.Errorf(
+			Success: false,
+			Message: fmt.Sprintf(
 				"user with id %s already exists",
 				realUser.UserID,
-			)
+			),
+		}, fmt.Errorf(
+			"user with id %s already exists",
+			realUser.UserID,
+		)
 	}
 	err = user.AddUser(
 		ctx,
@@ -266,11 +310,11 @@ func (r *queryResolver) Login(ctx context.Context, input *model.LoginUserForm) (
 	}
 	if !success {
 		return &model.LoginInfo{
-				Success: false,
-				Message: "user does not exists",
-			}, fmt.Errorf(
-				"user does not exists",
-			)
+			Success: false,
+			Message: "user does not exists",
+		}, fmt.Errorf(
+			"user does not exists",
+		)
 	}
 	token := redismanager.NewToken(
 		"login",

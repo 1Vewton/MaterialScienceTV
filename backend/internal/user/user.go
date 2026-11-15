@@ -12,7 +12,6 @@ import (
 
 // User struct provides the user datamodel for database
 type User struct {
-	gorm.Model
 	UserID       string `gorm:"primaryKey"`
 	UserName     string
 	HashValue    string
@@ -225,10 +224,14 @@ func DeleteUser(
 	db *gorm.DB,
 	userID string,
 ) error {
-	_, err := gorm.G[*User](db).Where(
-		&User{
-			UserID: userID,
-		},
-	).Delete(ctx)
+	fetchedUser, err := GetUser(
+		ctx,
+		db,
+		userID,
+	)
+	if err != nil {
+		return err
+	}
+	err = db.Unscoped().Delete(fetchedUser).Error
 	return err
 }
