@@ -32,32 +32,16 @@ func (todo *Todo) Equals(
 
 // NewTodo creates new todo
 func NewTodo(
-	ctx context.Context,
-	db *gorm.DB,
 	todoID string,
 	userID string,
 	text string,
-) (*Todo, error) {
-	hasUser, err := user.HasUser(
-		ctx,
-		db,
-		userID,
-	)
-	if err != nil {
-		return nil, err
-	}
-	if !hasUser {
-		return nil, fmt.Errorf(
-			"user with id %s does not exists",
-			userID,
-		)
-	}
+) *Todo {
 	return &Todo{
 		Done:     false,
 		MasterID: userID,
 		TodoID:   todoID,
 		Text:     text,
-	}, nil
+	}
 }
 
 // SetDueDateByTime sets due date by time.Time
@@ -85,7 +69,21 @@ func SaveTodo(
 	db *gorm.DB,
 	todo *Todo,
 ) error {
-	err := gorm.G[Todo](db).Create(
+	hasUser, err := user.HasUser(
+		ctx,
+		db,
+		todo.MasterID,
+	)
+	if err != nil {
+		return err
+	}
+	if !hasUser {
+		return fmt.Errorf(
+			"user with id %s does not exists",
+			todo.MasterID,
+		)
+	}
+	err = gorm.G[Todo](db).Create(
 		ctx,
 		todo,
 	)
@@ -230,5 +228,11 @@ func DeleteTodo(
 	todoID string,
 	db *gorm.DB,
 ) error {
-	return nil
+	_, err := gorm.G[*Todo](db).Where(
+		&Todo{
+			MasterID: userID,
+			TodoID:   todoID,
+		},
+	).Delete(ctx)
+	return err
 }

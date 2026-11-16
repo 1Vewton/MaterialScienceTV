@@ -58,6 +58,7 @@ type ComplexityRoot struct {
 		CreateTodo       func(childComplexity int, input model.NewTodo) int
 		CreateUser       func(childComplexity int, input model.NewUser) int
 		DeleteAccount    func(childComplexity int) int
+		DeleteTodo       func(childComplexity int, input model.DeleteTodoParam) int
 		MarkTodoFinished func(childComplexity int, input model.MarkTodoForm) int
 	}
 
@@ -97,6 +98,7 @@ type MutationResolver interface {
 	CreateUser(ctx context.Context, input model.NewUser) (*model.Info, error)
 	MarkTodoFinished(ctx context.Context, input model.MarkTodoForm) (*model.Info, error)
 	DeleteAccount(ctx context.Context) (*model.Info, error)
+	DeleteTodo(ctx context.Context, input model.DeleteTodoParam) (*model.Info, error)
 }
 type QueryResolver interface {
 	Todos(ctx context.Context, input model.GetTodoParam) (*model.GetTodoInfo, error)
@@ -201,6 +203,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.DeleteAccount(childComplexity), true
+	case "Mutation.deleteTodo":
+		if e.ComplexityRoot.Mutation.DeleteTodo == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteTodo_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.DeleteTodo(childComplexity, args["input"].(model.DeleteTodoParam)), true
 	case "Mutation.markTodoFinished":
 		if e.ComplexityRoot.Mutation.MarkTodoFinished == nil {
 			break
@@ -319,6 +332,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	opCtx := graphql.GetOperationContext(ctx)
 	ec := newExecutionContext(opCtx, e, make(chan graphql.DeferredResult))
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputDeleteTodoParam,
 		ec.unmarshalInputGetTodoParam,
 		ec.unmarshalInputLoginUserForm,
 		ec.unmarshalInputMarkTodoForm,
@@ -614,6 +628,20 @@ func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, 
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
 		func(ctx context.Context, v any) (model.NewUser, error) {
 			return ec.unmarshalNNewUser2githubᚗcomᚋ1VewtonᚋMaterialScienceTVᚋbackendᚋgraphᚋmodelᚐNewUser(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteTodo_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.DeleteTodoParam, error) {
+			return ec.unmarshalNDeleteTodoParam2githubᚗcomᚋ1VewtonᚋMaterialScienceTVᚋbackendᚋgraphᚋmodelᚐDeleteTodoParam(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -1100,6 +1128,50 @@ func (ec *executionContext) fieldContext_Mutation_deleteAccount(_ context.Contex
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return ec.childFields_Info(ctx, field)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteTodo(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_deleteTodo(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().DeleteTodo(ctx, fc.Args["input"].(model.DeleteTodoParam))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Info) graphql.Marshaler {
+			return ec.marshalNInfo2ᚖgithubᚗcomᚋ1VewtonᚋMaterialScienceTVᚋbackendᚋgraphᚋmodelᚐInfo(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_deleteTodo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Info(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteTodo_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -2612,6 +2684,36 @@ func (ec *executionContext) fieldContext___Type_isOneOf(_ context.Context, field
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputDeleteTodoParam(ctx context.Context, obj any) (model.DeleteTodoParam, error) {
+	var it model.DeleteTodoParam
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"todoID"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "todoID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("todoID"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TodoID = data
+		}
+	}
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputGetTodoParam(ctx context.Context, obj any) (model.GetTodoParam, error) {
 	var it model.GetTodoParam
 	if obj == nil {
@@ -2988,6 +3090,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "deleteAccount":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_deleteAccount(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteTodo":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteTodo(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -3694,6 +3803,11 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNDeleteTodoParam2githubᚗcomᚋ1VewtonᚋMaterialScienceTVᚋbackendᚋgraphᚋmodelᚐDeleteTodoParam(ctx context.Context, v any) (model.DeleteTodoParam, error) {
+	res, err := ec.unmarshalInputDeleteTodoParam(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNGetTodoInfo2githubᚗcomᚋ1VewtonᚋMaterialScienceTVᚋbackendᚋgraphᚋmodelᚐGetTodoInfo(ctx context.Context, sel ast.SelectionSet, v model.GetTodoInfo) graphql.Marshaler {

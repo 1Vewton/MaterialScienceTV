@@ -2,6 +2,10 @@
 
 package model
 
+type DeleteTodoParam struct {
+	TodoID string `json:"todoID"`
+}
+
 type GetTodoInfo struct {
 	Success bool    `json:"success"`
 	Message string  `json:"message"`

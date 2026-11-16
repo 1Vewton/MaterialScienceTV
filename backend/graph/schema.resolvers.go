@@ -47,19 +47,11 @@ func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) 
 	todoID := ids.NewUniqueString(
 		"todo",
 	)
-	newTodo, err := todos.NewTodo(
-		ctx,
-		database.DataBase,
+	newTodo := todos.NewTodo(
 		todoID,
 		fetchedUser.UserID,
 		input.Text,
 	)
-	if err != nil {
-		return &model.Info{
-			Success: false,
-			Message: err.Error(),
-		}, err
-	}
 	err = todos.SaveTodo(
 		ctx,
 		database.DataBase,
@@ -250,6 +242,44 @@ func (r *mutationResolver) DeleteAccount(ctx context.Context) (*model.Info, erro
 	}
 	return &model.Info{
 		Success: true,
+	}, nil
+}
+
+// DeleteTodo is the resolver for the deleteTodo field.
+func (r *mutationResolver) DeleteTodo(ctx context.Context, input model.DeleteTodoParam) (*model.Info, error) {
+	fetchedUser, exists, err := VerifyUserFromCookie(
+		ctx,
+		redismanager.RedisClient,
+		database.DataBase,
+	)
+	if err != nil {
+		return &model.Info{
+			Success: false,
+			Message: err.Error(),
+		}, err
+	}
+	if !exists {
+		msg := "The user does not exists"
+		return &model.Info{
+			Success: false,
+			Message: msg,
+		}, errors.New(msg)
+	}
+	err = todos.DeleteTodo(
+		ctx,
+		fetchedUser.UserID,
+		input.TodoID,
+		database.DataBase,
+	)
+	if err != nil {
+		return &model.Info{
+			Success: false,
+			Message: err.Error(),
+		}, err
+	}
+	return &model.Info{
+		Success: true,
+		Message: "Todo deleted",
 	}, nil
 }
 

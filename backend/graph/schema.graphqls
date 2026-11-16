@@ -74,6 +74,11 @@ input MarkTodoForm{
   todoID: String!
 }
 
+# DeleteTodoParam defines the parameter for deleting todo
+input DeleteTodoParam{
+  todoID: String!
+}
+
 # Mutation: Change data
 type Mutation {
   # createTodo creates new todo
@@ -84,6 +89,7 @@ type Mutation {
   markTodoFinished(input: MarkTodoForm!): Info!
   # deleteAccount deletes the account
   deleteAccount: Info!
+  deleteTodo(input: DeleteTodoParam!): Info!
 }
 
 # Query: Get data

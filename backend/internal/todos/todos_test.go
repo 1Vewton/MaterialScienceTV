@@ -42,30 +42,20 @@ func TestTimeSetting(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	newTodo, err := NewTodo(
-		ctx,
-		db,
+	newTodo := NewTodo(
 		taskID,
 		userID,
 		"test",
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
 	testTime := time.Now()
 	newTodo.SetDueDateByTime(
 		testTime,
 	)
-	newTodo2, err := NewTodo(
-		ctx,
-		db,
+	newTodo2 := NewTodo(
 		taskID,
 		userID,
 		"test",
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
 	newTodo2.SetDueDateByTimestamp(
 		testTime.UnixNano(),
 	)
@@ -112,16 +102,11 @@ func TestTodosCRUD(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	newTodo, err := NewTodo(
-		ctx,
-		db,
+	newTodo := NewTodo(
 		taskID,
 		userID,
 		"test",
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
 	testTime := time.Now()
 	newTodo.SetDueDateByTime(
 		testTime,
@@ -185,16 +170,11 @@ func TestForeginKey(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	newTodo, err := NewTodo(
-		ctx,
-		db,
+	newTodo := NewTodo(
 		todoID,
 		userID,
 		"test",
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
 	err = SaveTodo(
 		ctx,
 		db,
@@ -262,6 +242,119 @@ func TestForeginKey(t *testing.T) {
 			"expected todo %s to get deleted with the deletion of user %s",
 			todoID,
 			userID,
+		)
+	}
+}
+
+// TestDeleteTodo test deleting todos
+func TestDeleteTodo(t *testing.T) {
+	t.Parallel()
+	ctx := t.Context()
+	// Database preparation
+	db, err := database.InitDataBase(
+		databasetype.Sqlite,
+		":memory:?_pragma=foreign_keys(1)",
+		&Todo{},
+		&user.User{},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Add User
+	userID := uuid.NewString()
+	todoID := uuid.NewString()
+	newUser, err := user.NewUser(
+		"114514",
+		"abc114514",
+		"abc@github.com",
+		userID,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = user.AddUser(
+		ctx,
+		db,
+		newUser,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	hasUser, err := user.HasUser(
+		ctx,
+		db,
+		userID,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !hasUser {
+		t.Fatalf(
+			"user id %s does not exists",
+			userID,
+		)
+	}
+	newTodo := NewTodo(
+		todoID,
+		userID,
+		"114514",
+	)
+	err = SaveTodo(
+		ctx,
+		db,
+		newTodo,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	hasTodo, err := HasTodo(
+		ctx,
+		db,
+		todoID,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !hasTodo {
+		t.Fatalf(
+			"expected to have todo %s",
+			todoID,
+		)
+	}
+	err = DeleteTodo(
+		ctx,
+		userID,
+		todoID,
+		db,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	hasTodoAfterDelete, err := HasTodo(
+		ctx,
+		db,
+		todoID,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if hasTodoAfterDelete {
+		t.Fatalf(
+			"expected user id %s to get deleted",
+			todoID,
+		)
+	}
+	hasUserAferDelete, err := user.HasUser(
+		ctx,
+		db,
+		userID,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !hasUserAferDelete {
+		t.Fatal(
+			"the user should still exist",
 		)
 	}
 }
