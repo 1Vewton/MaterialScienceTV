@@ -25,38 +25,11 @@ import (
 
 // CreateTodo is the resolver for the createTodo field.
 func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (*model.Info, error) {
-	// Get token stored in cookies
-	request, err := cookie.GetRequestFromContext(
-		ctx,
-	)
-	if err != nil {
-		return &model.Info{
-			Success: false,
-			Message: err.Error(),
-		}, err
-	}
-	requestCookie, err := request.Cookie(
-		cookie.LoginTokenKey,
-	)
-	if err != nil {
-		if err != http.ErrNoCookie {
-			return &model.Info{
-				Success: false,
-				Message: err.Error(),
-			}, nil
-		}
-		return &model.Info{
-			Success: false,
-			Message: err.Error(),
-		}, err
-	}
-	token := requestCookie.Value
 	// Validate user
-	fetchedUser, userExists, err := user.VerifyLoginToken(
+	fetchedUser, userExists, err := VerifyUserFromCookie(
 		ctx,
 		redismanager.RedisClient,
 		database.DataBase,
-		token,
 	)
 	if err != nil {
 		return &model.Info{
@@ -104,90 +77,6 @@ func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) 
 	}, nil
 }
 
-// GetTodo is the resolver for the getTodo field.
-func (r *mutationResolver) GetTodo(ctx context.Context, input model.GetTodoParam) (*model.GetTodoInfo, error) {
-	// Get token stored in cookies
-	request, err := cookie.GetRequestFromContext(
-		ctx,
-	)
-	if err != nil {
-		return &model.GetTodoInfo{
-			Success: false,
-			Message: err.Error(),
-		}, err
-	}
-	requestCookie, err := request.Cookie(
-		cookie.LoginTokenKey,
-	)
-	if err != nil {
-		if err != http.ErrNoCookie {
-			return &model.GetTodoInfo{
-				Success: false,
-				Message: err.Error(),
-			}, nil
-		}
-		return &model.GetTodoInfo{
-			Success: false,
-			Message: err.Error(),
-		}, err
-	}
-	token := requestCookie.Value
-	// Validate user
-	verifiedUser, userExists, err := user.VerifyLoginToken(
-		ctx,
-		redismanager.RedisClient,
-		database.DataBase,
-		token,
-	)
-	if err != nil {
-		return &model.GetTodoInfo{
-			Success: false,
-			Message: err.Error(),
-		}, err
-	}
-	if !userExists {
-		return &model.GetTodoInfo{
-			Success: false,
-			Message: "the token points to a invalid user",
-		}, err
-	}
-	var fetchedTodos []*todos.Todo
-	if input.FutureRange != nil {
-		fetchedTodos, err = todos.GetTodosForRangeOfTime(
-			ctx,
-			database.DataBase,
-			verifiedUser.UserID,
-			int64(*input.FutureRange),
-		)
-		if err != nil {
-			return &model.GetTodoInfo{
-				Success: false,
-				Message: err.Error(),
-			}, err
-		}
-	} else {
-		fetchedTodos, err = todos.GetTodosByUser(
-			ctx,
-			database.DataBase,
-			verifiedUser.UserID,
-		)
-		if err != nil {
-			return &model.GetTodoInfo{
-				Success: false,
-				Message: err.Error(),
-			}, err
-		}
-	}
-	convertedModel := ToModel(
-		fetchedTodos,
-	)
-	return &model.GetTodoInfo{
-		Success: true,
-		Message: "Successfully get the todos",
-		Todos:   convertedModel,
-	}, nil
-}
-
 // CreateUser is the resolver for the createUser field.
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) (*model.Info, error) {
 	// Get writer
@@ -213,11 +102,12 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 	// Checks if there is cookie
 	if err != http.ErrNoCookie {
 		if err == nil {
+			msg := "you already submitted a register request"
 			return &model.Info{
 				Success: false,
-				Message: "you already submitted a register request",
+				Message: msg,
 			}, errors.New(
-				"you already submitted a register request",
+				msg,
 			)
 		}
 		return &model.Info{
@@ -232,16 +122,14 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 		input.UserName,
 	)
 	if exists {
-		return &model.Info{
-			Success: false,
-			Message: fmt.Sprintf(
-				"user with username %s already exists",
-				input.UserName,
-			),
-		}, fmt.Errorf(
+		msg := fmt.Sprintf(
 			"user with username %s already exists",
 			input.UserName,
 		)
+		return &model.Info{
+			Success: false,
+			Message: msg,
+		}, errors.New(msg)
 	}
 	// New tmp user
 	token := ids.NewUniqueString("register")
@@ -292,37 +180,12 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUser) 
 	}, nil
 }
 
-// VerifyUser is the resolver for the verifyUser field.
-func (r *mutationResolver) VerifyUser(ctx context.Context) (*model.Info, error) {
-	// Get token stored in cookies
-	request, err := cookie.GetRequestFromContext(
-		ctx,
-	)
-	if err != nil {
-		return &model.Info{
-			Success: false,
-			Message: err.Error(),
-		}, err
-	}
-	requestCookie, err := request.Cookie(cookie.RegisterTokenKey)
-	if err != nil {
-		if err == http.ErrNoCookie {
-			return &model.Info{
-				Success: false,
-				Message: "session expired or not exists",
-			}, errors.New(
-				"session expired or not exists",
-			)
-		}
-		return &model.Info{
-			Success: false,
-		}, err
-	}
-	token := requestCookie.Value
-	tmpUser, err := user.GetTmpUser(
+// MarkTodoFinished is the resolver for the markTodoFinished field.
+func (r *mutationResolver) MarkTodoFinished(ctx context.Context, input model.MarkTodoForm) (*model.Info, error) {
+	verifiedUser, exists, err := VerifyUserFromCookie(
 		ctx,
 		redismanager.RedisClient,
-		token,
+		database.DataBase,
 	)
 	if err != nil {
 		return &model.Info{
@@ -330,48 +193,54 @@ func (r *mutationResolver) VerifyUser(ctx context.Context) (*model.Info, error) 
 			Message: err.Error(),
 		}, err
 	}
-	// Checks if there exists a username
-	exists, err := user.HasUserName(
-		ctx,
-		database.DataBase,
-		tmpUser.UserName,
-	)
-	if exists {
+	if !exists {
+		msg := "user does not exist, add failed"
 		return &model.Info{
 			Success: false,
-			Message: fmt.Sprintf(
-				"user with username %s already exists",
-				tmpUser.UserName,
-			),
-		}, fmt.Errorf(
-			"user with username %s already exists",
-			tmpUser.UserName,
-		)
+			Message: msg,
+		}, errors.New(msg)
 	}
-	// Stores user data to the tmpuser
-	realUser := tmpUser.ToUserData()
-	// Checks if there exists a user id
-	exists, err = user.HasUser(
+	err = todos.MarkTodoAsFinished(
 		ctx,
 		database.DataBase,
-		realUser.UserID,
+		verifiedUser.UserID,
+		input.TodoID,
 	)
-	if exists {
+	if err != nil {
 		return &model.Info{
 			Success: false,
-			Message: fmt.Sprintf(
-				"user with id %s already exists",
-				realUser.UserID,
-			),
-		}, fmt.Errorf(
-			"user with id %s already exists",
-			realUser.UserID,
-		)
+			Message: err.Error(),
+		}, err
 	}
-	err = user.AddUser(
+	return &model.Info{
+		Success: true,
+		Message: "Successfully marks todo as finished",
+	}, nil
+}
+
+// DeleteAccount is the resolver for the deleteAccount field.
+func (r *mutationResolver) DeleteAccount(ctx context.Context) (*model.Info, error) {
+	userVerified, exists, err := VerifyUserFromCookie(
+		ctx,
+		redismanager.RedisClient,
+		database.DataBase,
+	)
+	if err != nil {
+		return &model.Info{
+			Success: false,
+			Message: err.Error(),
+		}, err
+	}
+	if !exists {
+		return &model.Info{
+			Success: false,
+			Message: "the session is not valid or expired or user invalid",
+		}, nil
+	}
+	err = user.DeleteUser(
 		ctx,
 		database.DataBase,
-		realUser,
+		userVerified.UserID,
 	)
 	if err != nil {
 		return &model.Info{
@@ -385,8 +254,59 @@ func (r *mutationResolver) VerifyUser(ctx context.Context) (*model.Info, error) 
 }
 
 // Todos is the resolver for the todos field.
-func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: Todos - todos"))
+func (r *queryResolver) Todos(ctx context.Context, input model.GetTodoParam) (*model.GetTodoInfo, error) {
+	verifiedUser, userExists, err := VerifyUserFromCookie(
+		ctx,
+		redismanager.RedisClient,
+		database.DataBase,
+	)
+	if err != nil {
+		return &model.GetTodoInfo{
+			Success: false,
+			Message: err.Error(),
+		}, err
+	}
+	if !userExists {
+		return &model.GetTodoInfo{
+			Success: false,
+			Message: "the token points to a invalid user",
+		}, err
+	}
+	var fetchedTodos []*todos.Todo
+	if input.FutureRange != nil {
+		fetchedTodos, err = todos.GetTodosForRangeOfTime(
+			ctx,
+			database.DataBase,
+			verifiedUser.UserID,
+			int64(*input.FutureRange),
+		)
+		if err != nil {
+			return &model.GetTodoInfo{
+				Success: false,
+				Message: err.Error(),
+			}, err
+		}
+	} else {
+		fetchedTodos, err = todos.GetTodosByUser(
+			ctx,
+			database.DataBase,
+			verifiedUser.UserID,
+		)
+		if err != nil {
+			return &model.GetTodoInfo{
+				Success: false,
+				Message: err.Error(),
+			}, err
+		}
+	}
+	convertedModel := ToModel(
+		fetchedTodos,
+	)
+	return &model.GetTodoInfo{
+		Success: true,
+		Message: "Successfully get the todos",
+		Todos:   convertedModel,
+	}, nil
 }
 
 // Login is the resolver for the login field.
@@ -484,37 +404,36 @@ func (r *queryResolver) Login(ctx context.Context, input *model.LoginUserForm) (
 	}, nil
 }
 
-// DeleteAccount is the resolver for the deleteAccount field.
-func (r *queryResolver) DeleteAccount(ctx context.Context) (*model.Info, error) {
+// VerifyUser is the resolver for the verifyUser field.
+func (r *queryResolver) VerifyUser(ctx context.Context) (*model.Info, error) {
+	// Get token stored in cookies
 	request, err := cookie.GetRequestFromContext(
 		ctx,
 	)
 	if err != nil {
 		return &model.Info{
-			Success: true,
-			Message: err.Error(),
-		}, err
-	}
-	requestCookie, err := request.Cookie(
-		cookie.LoginTokenKey,
-	)
-	if err != nil {
-		if err != http.ErrNoCookie {
-			return &model.Info{
-				Success: false,
-				Message: err.Error(),
-			}, nil
-		}
-		return &model.Info{
 			Success: false,
 			Message: err.Error(),
 		}, err
 	}
+	requestCookie, err := request.Cookie(cookie.RegisterTokenKey)
+	if err != nil {
+		if err == http.ErrNoCookie {
+			return &model.Info{
+				Success: false,
+				Message: "session expired or not exists",
+			}, errors.New(
+				"session expired or not exists",
+			)
+		}
+		return &model.Info{
+			Success: false,
+		}, err
+	}
 	token := requestCookie.Value
-	userVerified, exists, err := user.VerifyLoginToken(
+	tmpUser, err := user.GetTmpUser(
 		ctx,
 		redismanager.RedisClient,
-		database.DataBase,
 		token,
 	)
 	if err != nil {
@@ -523,16 +442,48 @@ func (r *queryResolver) DeleteAccount(ctx context.Context) (*model.Info, error) 
 			Message: err.Error(),
 		}, err
 	}
-	if !exists {
-		return &model.Info{
-			Success: false,
-			Message: "the session is not valid or expired or user invalid",
-		}, nil
-	}
-	err = user.DeleteUser(
+	// Checks if there exists a username
+	exists, err := user.HasUserName(
 		ctx,
 		database.DataBase,
-		userVerified.UserID,
+		tmpUser.UserName,
+	)
+	if exists {
+		return &model.Info{
+			Success: false,
+			Message: fmt.Sprintf(
+				"user with username %s already exists",
+				tmpUser.UserName,
+			),
+		}, fmt.Errorf(
+			"user with username %s already exists",
+			tmpUser.UserName,
+		)
+	}
+	// Stores user data to the tmpuser
+	realUser := tmpUser.ToUserData()
+	// Checks if there exists a user id
+	exists, err = user.HasUser(
+		ctx,
+		database.DataBase,
+		realUser.UserID,
+	)
+	if exists {
+		return &model.Info{
+			Success: false,
+			Message: fmt.Sprintf(
+				"user with id %s already exists",
+				realUser.UserID,
+			),
+		}, fmt.Errorf(
+			"user with id %s already exists",
+			realUser.UserID,
+		)
+	}
+	err = user.AddUser(
+		ctx,
+		database.DataBase,
+		realUser,
 	)
 	if err != nil {
 		return &model.Info{

@@ -29,6 +29,10 @@ type LoginUserForm struct {
 	Password string  `json:"password"`
 }
 
+type MarkTodoForm struct {
+	TodoID string `json:"todoID"`
+}
+
 type Mutation struct {
 }
 

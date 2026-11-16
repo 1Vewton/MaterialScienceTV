@@ -55,16 +55,16 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateTodo func(childComplexity int, input model.NewTodo) int
-		CreateUser func(childComplexity int, input model.NewUser) int
-		GetTodo    func(childComplexity int, input model.GetTodoParam) int
-		VerifyUser func(childComplexity int) int
+		CreateTodo       func(childComplexity int, input model.NewTodo) int
+		CreateUser       func(childComplexity int, input model.NewUser) int
+		DeleteAccount    func(childComplexity int) int
+		MarkTodoFinished func(childComplexity int, input model.MarkTodoForm) int
 	}
 
 	Query struct {
-		DeleteAccount func(childComplexity int) int
-		Login         func(childComplexity int, input *model.LoginUserForm) int
-		Todos         func(childComplexity int) int
+		Login      func(childComplexity int, input *model.LoginUserForm) int
+		Todos      func(childComplexity int, input model.GetTodoParam) int
+		VerifyUser func(childComplexity int) int
 	}
 
 	ReturnUser struct {
@@ -94,14 +94,14 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	CreateTodo(ctx context.Context, input model.NewTodo) (*model.Info, error)
-	GetTodo(ctx context.Context, input model.GetTodoParam) (*model.GetTodoInfo, error)
 	CreateUser(ctx context.Context, input model.NewUser) (*model.Info, error)
-	VerifyUser(ctx context.Context) (*model.Info, error)
+	MarkTodoFinished(ctx context.Context, input model.MarkTodoForm) (*model.Info, error)
+	DeleteAccount(ctx context.Context) (*model.Info, error)
 }
 type QueryResolver interface {
-	Todos(ctx context.Context) ([]*model.Todo, error)
+	Todos(ctx context.Context, input model.GetTodoParam) (*model.GetTodoInfo, error)
 	Login(ctx context.Context, input *model.LoginUserForm) (*model.LoginInfo, error)
-	DeleteAccount(ctx context.Context) (*model.Info, error)
+	VerifyUser(ctx context.Context) (*model.Info, error)
 }
 
 // endregion ************************** generated!.gotpl **************************
@@ -195,30 +195,23 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.CreateUser(childComplexity, args["input"].(model.NewUser)), true
-	case "Mutation.getTodo":
-		if e.ComplexityRoot.Mutation.GetTodo == nil {
+	case "Mutation.deleteAccount":
+		if e.ComplexityRoot.Mutation.DeleteAccount == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_getTodo_args(ctx, rawArgs)
+		return e.ComplexityRoot.Mutation.DeleteAccount(childComplexity), true
+	case "Mutation.markTodoFinished":
+		if e.ComplexityRoot.Mutation.MarkTodoFinished == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_markTodoFinished_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Mutation.GetTodo(childComplexity, args["input"].(model.GetTodoParam)), true
-	case "Mutation.verifyUser":
-		if e.ComplexityRoot.Mutation.VerifyUser == nil {
-			break
-		}
-
-		return e.ComplexityRoot.Mutation.VerifyUser(childComplexity), true
-
-	case "Query.deleteAccount":
-		if e.ComplexityRoot.Query.DeleteAccount == nil {
-			break
-		}
-
-		return e.ComplexityRoot.Query.DeleteAccount(childComplexity), true
+		return e.ComplexityRoot.Mutation.MarkTodoFinished(childComplexity, args["input"].(model.MarkTodoForm)), true
 
 	case "Query.login":
 		if e.ComplexityRoot.Query.Login == nil {
@@ -236,7 +229,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			break
 		}
 
-		return e.ComplexityRoot.Query.Todos(childComplexity), true
+		args, err := ec.field_Query_todos_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.Todos(childComplexity, args["input"].(model.GetTodoParam)), true
+	case "Query.verifyUser":
+		if e.ComplexityRoot.Query.VerifyUser == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Query.VerifyUser(childComplexity), true
 
 	case "ReturnUser.email":
 		if e.ComplexityRoot.ReturnUser.Email == nil {
@@ -317,6 +321,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputGetTodoParam,
 		ec.unmarshalInputLoginUserForm,
+		ec.unmarshalInputMarkTodoForm,
 		ec.unmarshalInputNewTodo,
 		ec.unmarshalInputNewUser,
 	)
@@ -617,12 +622,12 @@ func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, 
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_getTodo_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Mutation_markTodoFinished_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
-		func(ctx context.Context, v any) (model.GetTodoParam, error) {
-			return ec.unmarshalNGetTodoParam2githubᚗcomᚋ1VewtonᚋMaterialScienceTVᚋbackendᚋgraphᚋmodelᚐGetTodoParam(ctx, v)
+		func(ctx context.Context, v any) (model.MarkTodoForm, error) {
+			return ec.unmarshalNMarkTodoForm2githubᚗcomᚋ1VewtonᚋMaterialScienceTVᚋbackendᚋgraphᚋmodelᚐMarkTodoForm(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -651,6 +656,20 @@ func (ec *executionContext) field_Query_login_args(ctx context.Context, rawArgs 
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
 		func(ctx context.Context, v any) (*model.LoginUserForm, error) {
 			return ec.unmarshalOLoginUserForm2ᚖgithubᚗcomᚋ1VewtonᚋMaterialScienceTVᚋbackendᚋgraphᚋmodelᚐLoginUserForm(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_todos_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.GetTodoParam, error) {
+			return ec.unmarshalNGetTodoParam2githubᚗcomᚋ1VewtonᚋMaterialScienceTVᚋbackendᚋgraphᚋmodelᚐGetTodoParam(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -965,50 +984,6 @@ func (ec *executionContext) fieldContext_Mutation_createTodo(ctx context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_getTodo(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.fieldContext_Mutation_getTodo(ctx, field)
-		},
-		func(ctx context.Context) (any, error) {
-			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Mutation().GetTodo(ctx, fc.Args["input"].(model.GetTodoParam))
-		},
-		nil,
-		func(ctx context.Context, selections ast.SelectionSet, v *model.GetTodoInfo) graphql.Marshaler {
-			return ec.marshalNGetTodoInfo2ᚖgithubᚗcomᚋ1VewtonᚋMaterialScienceTVᚋbackendᚋgraphᚋmodelᚐGetTodoInfo(ctx, selections, v)
-		},
-		true,
-		true,
-	)
-}
-func (ec *executionContext) fieldContext_Mutation_getTodo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.childFields_GetTodoInfo(ctx, field)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_getTodo_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Mutation_createUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -1053,16 +1028,17 @@ func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_verifyUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_markTodoFinished(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
 		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.fieldContext_Mutation_verifyUser(ctx, field)
+			return ec.fieldContext_Mutation_markTodoFinished(ctx, field)
 		},
 		func(ctx context.Context) (any, error) {
-			return ec.Resolvers.Mutation().VerifyUser(ctx)
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().MarkTodoFinished(ctx, fc.Args["input"].(model.MarkTodoForm))
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Info) graphql.Marshaler {
@@ -1072,7 +1048,50 @@ func (ec *executionContext) _Mutation_verifyUser(ctx context.Context, field grap
 		true,
 	)
 }
-func (ec *executionContext) fieldContext_Mutation_verifyUser(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_markTodoFinished(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Info(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_markTodoFinished_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteAccount(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_deleteAccount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Mutation().DeleteAccount(ctx)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Info) graphql.Marshaler {
+			return ec.marshalNInfo2ᚖgithubᚗcomᚋ1VewtonᚋMaterialScienceTVᚋbackendᚋgraphᚋmodelᚐInfo(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_deleteAccount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -1094,25 +1113,37 @@ func (ec *executionContext) _Query_todos(ctx context.Context, field graphql.Coll
 			return ec.fieldContext_Query_todos(ctx, field)
 		},
 		func(ctx context.Context) (any, error) {
-			return ec.Resolvers.Query().Todos(ctx)
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().Todos(ctx, fc.Args["input"].(model.GetTodoParam))
 		},
 		nil,
-		func(ctx context.Context, selections ast.SelectionSet, v []*model.Todo) graphql.Marshaler {
-			return ec.marshalNTodo2ᚕᚖgithubᚗcomᚋ1VewtonᚋMaterialScienceTVᚋbackendᚋgraphᚋmodelᚐTodoᚄ(ctx, selections, v)
+		func(ctx context.Context, selections ast.SelectionSet, v *model.GetTodoInfo) graphql.Marshaler {
+			return ec.marshalNGetTodoInfo2ᚖgithubᚗcomᚋ1VewtonᚋMaterialScienceTVᚋbackendᚋgraphᚋmodelᚐGetTodoInfo(ctx, selections, v)
 		},
 		true,
 		true,
 	)
 }
-func (ec *executionContext) fieldContext_Query_todos(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_todos(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.childFields_Todo(ctx, field)
+			return ec.childFields_GetTodoInfo(ctx, field)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_todos_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -1161,16 +1192,16 @@ func (ec *executionContext) fieldContext_Query_login(ctx context.Context, field 
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_deleteAccount(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_verifyUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
 		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.fieldContext_Query_deleteAccount(ctx, field)
+			return ec.fieldContext_Query_verifyUser(ctx, field)
 		},
 		func(ctx context.Context) (any, error) {
-			return ec.Resolvers.Query().DeleteAccount(ctx)
+			return ec.Resolvers.Query().VerifyUser(ctx)
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Info) graphql.Marshaler {
@@ -1180,7 +1211,7 @@ func (ec *executionContext) _Query_deleteAccount(ctx context.Context, field grap
 		true,
 	)
 }
-func (ec *executionContext) fieldContext_Query_deleteAccount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_verifyUser(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -2655,6 +2686,36 @@ func (ec *executionContext) unmarshalInputLoginUserForm(ctx context.Context, obj
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputMarkTodoForm(ctx context.Context, obj any) (model.MarkTodoForm, error) {
+	var it model.MarkTodoForm
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"todoID"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "todoID":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("todoID"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TodoID = data
+		}
+	}
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputNewTodo(ctx context.Context, obj any) (model.NewTodo, error) {
 	var it model.NewTodo
 	if obj == nil {
@@ -2910,13 +2971,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "getTodo":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_getTodo(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "createUser":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createUser(ctx, field)
@@ -2924,9 +2978,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "verifyUser":
+		case "markTodoFinished":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_verifyUser(ctx, field)
+				return ec._Mutation_markTodoFinished(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteAccount":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteAccount(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -3016,7 +3077,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "deleteAccount":
+		case "verifyUser":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -3025,7 +3086,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_deleteAccount(ctx, field)
+				res = ec._Query_verifyUser(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -3698,6 +3759,11 @@ func (ec *executionContext) marshalNLoginInfo2ᚖgithubᚗcomᚋ1VewtonᚋMateri
 	return ec._LoginInfo(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNMarkTodoForm2githubᚗcomᚋ1VewtonᚋMaterialScienceTVᚋbackendᚋgraphᚋmodelᚐMarkTodoForm(ctx context.Context, v any) (model.MarkTodoForm, error) {
+	res, err := ec.unmarshalInputMarkTodoForm(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNNewTodo2githubᚗcomᚋ1VewtonᚋMaterialScienceTVᚋbackendᚋgraphᚋmodelᚐNewTodo(ctx context.Context, v any) (model.NewTodo, error) {
 	res, err := ec.unmarshalInputNewTodo(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -3722,32 +3788,6 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) marshalNTodo2ᚕᚖgithubᚗcomᚋ1VewtonᚋMaterialScienceTVᚋbackendᚋgraphᚋmodelᚐTodoᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Todo) graphql.Marshaler {
-	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
-		fc := graphql.GetFieldContext(ctx)
-		fc.Result = &v[i]
-		return ec.marshalNTodo2ᚖgithubᚗcomᚋ1VewtonᚋMaterialScienceTVᚋbackendᚋgraphᚋmodelᚐTodo(ctx, sel, v[i])
-	})
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNTodo2ᚖgithubᚗcomᚋ1VewtonᚋMaterialScienceTVᚋbackendᚋgraphᚋmodelᚐTodo(ctx context.Context, sel ast.SelectionSet, v *model.Todo) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._Todo(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {

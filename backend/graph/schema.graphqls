@@ -69,24 +69,29 @@ input LoginUserForm{
   password: String!
 }
 
+# MarkTodoForm defines the form for marking todos
+input MarkTodoForm{
+  todoID: String!
+}
+
 # Mutation: Change data
 type Mutation {
   # createTodo creates new todo
   createTodo(input: NewTodo!): Info!
-  # getTodo gets todo for user
-  getTodo(input: GetTodoParam!): GetTodoInfo!
   # createUser creates new user
   createUser(input: NewUser!): Info!
-  # verifyUser verifies user
-  verifyUser: Info!
+  # markTodoFinished marks that the todo is finished
+  markTodoFinished(input: MarkTodoForm!): Info!
+  # deleteAccount deletes the account
+  deleteAccount: Info!
 }
 
 # Query: Get data
 type Query {
   # todos gets all the todos
-  todos: [Todo!]!
+  todos(input: GetTodoParam!): GetTodoInfo!
   # login logins the system
   login(input: LoginUserForm): LoginInfo!
-  # deleteAccount deletes the account
-  deleteAccount: Info!
+  # verifyUser verifies user
+  verifyUser: Info!
 }

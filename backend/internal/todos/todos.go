@@ -222,3 +222,13 @@ func GetTodosForRangeOfTime(
 	}
 	return resultTodo, nil
 }
+
+// DeleteTodo deletes single todo
+func DeleteTodo(
+	ctx context.Context,
+	userID string,
+	todoID string,
+	db *gorm.DB,
+) error {
+	return nil
+}

@@ -1,8 +1,14 @@
 package graph
 
 import (
+	"context"
+
 	"github.com/1Vewton/MaterialScienceTV/backend/graph/model"
+	"github.com/1Vewton/MaterialScienceTV/backend/internal/cookie"
 	"github.com/1Vewton/MaterialScienceTV/backend/internal/todos"
+	"github.com/1Vewton/MaterialScienceTV/backend/internal/user"
+	"github.com/redis/go-redis/v9"
+	"gorm.io/gorm"
 )
 
 // ToSingleModel converts single todo to model
@@ -33,4 +39,31 @@ func ToModel(
 		)
 	}
 	return result
+}
+
+// VerifyUserFromCookie verifies user form cookie
+func VerifyUserFromCookie(
+	ctx context.Context,
+	client *redis.Client,
+	db *gorm.DB,
+) (*user.User, bool, error) {
+	request, err := cookie.GetRequestFromContext(
+		ctx,
+	)
+	if err != nil {
+		return nil, false, err
+	}
+	requestCookie, err := request.Cookie(
+		cookie.LoginTokenKey,
+	)
+	if err != nil {
+		return nil, false, err
+	}
+	token := requestCookie.Value
+	return user.VerifyLoginToken(
+		ctx,
+		client,
+		db,
+		token,
+	)
 }
