@@ -151,23 +151,40 @@ func (r *mutationResolver) GetTodo(ctx context.Context, input model.GetTodoParam
 			Message: "the token points to a invalid user",
 		}, err
 	}
-	if input.ShowOnlyFutureTodos {
-		return nil, nil
+	var fetchedTodos []*todos.Todo
+	if input.FutureRange != nil {
+		fetchedTodos, err = todos.GetTodosForRangeOfTime(
+			ctx,
+			database.DataBase,
+			verifiedUser.UserID,
+			int64(*input.FutureRange),
+		)
+		if err != nil {
+			return &model.GetTodoInfo{
+				Success: false,
+				Message: err.Error(),
+			}, err
+		}
+	} else {
+		fetchedTodos, err = todos.GetTodosByUser(
+			ctx,
+			database.DataBase,
+			verifiedUser.UserID,
+		)
+		if err != nil {
+			return &model.GetTodoInfo{
+				Success: false,
+				Message: err.Error(),
+			}, err
+		}
 	}
-	_, err = todos.GetTodosByUser(
-		ctx,
-		database.DataBase,
-		verifiedUser.UserID,
+	convertedModel := ToModel(
+		fetchedTodos,
 	)
-	if err != nil {
-		return &model.GetTodoInfo{
-			Success: false,
-			Message: err.Error(),
-		}, err
-	}
 	return &model.GetTodoInfo{
 		Success: true,
 		Message: "Successfully get the todos",
+		Todos:   convertedModel,
 	}, nil
 }
 

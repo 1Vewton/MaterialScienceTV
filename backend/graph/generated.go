@@ -78,7 +78,6 @@ type ComplexityRoot struct {
 		DueDateUnixTimestamp func(childComplexity int) int
 		ID                   func(childComplexity int) int
 		Text                 func(childComplexity int) int
-		UserID               func(childComplexity int) int
 	}
 
 	User struct {
@@ -282,12 +281,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Todo.Text(childComplexity), true
-	case "Todo.userID":
-		if e.ComplexityRoot.Todo.UserID == nil {
-			break
-		}
-
-		return e.ComplexityRoot.Todo.UserID(childComplexity), true
 
 	case "User.email":
 		if e.ComplexityRoot.User.Email == nil {
@@ -474,8 +467,6 @@ func (ec *executionContext) childFields_Todo(ctx context.Context, field graphql.
 		return ec.fieldContext_Todo_text(ctx, field)
 	case "done":
 		return ec.fieldContext_Todo_done(ctx, field)
-	case "userID":
-		return ec.fieldContext_Todo_userID(ctx, field)
 	case "dueDateUnixTimestamp":
 		return ec.fieldContext_Todo_dueDateUnixTimestamp(ctx, field)
 	}
@@ -1414,29 +1405,6 @@ func (ec *executionContext) _Todo_done(ctx context.Context, field graphql.Collec
 }
 func (ec *executionContext) fieldContext_Todo_done(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("Todo", field, false, false, errors.New("field of type Boolean does not have child fields"))
-}
-
-func (ec *executionContext) _Todo_userID(ctx context.Context, field graphql.CollectedField, obj *model.Todo) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.fieldContext_Todo_userID(ctx, field)
-		},
-		func(ctx context.Context) (any, error) {
-			return obj.UserID, nil
-		},
-		nil,
-		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
-			return ec.marshalNString2string(ctx, selections, v)
-		},
-		true,
-		true,
-	)
-}
-func (ec *executionContext) fieldContext_Todo_userID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	return graphql.NewScalarFieldContext("Todo", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Todo_dueDateUnixTimestamp(ctx context.Context, field graphql.CollectedField, obj *model.Todo) (ret graphql.Marshaler) {
@@ -2624,20 +2592,20 @@ func (ec *executionContext) unmarshalInputGetTodoParam(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"showOnlyFutureTodos"}
+	fieldsInOrder := [...]string{"futureRange"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "showOnlyFutureTodos":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("showOnlyFutureTodos"))
-			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+		case "futureRange":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("futureRange"))
+			data, err := ec.unmarshalOInt2ᚖint32(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.ShowOnlyFutureTodos = data
+			it.FutureRange = data
 		}
 	}
 	return it, nil
@@ -3177,11 +3145,6 @@ func (ec *executionContext) _Todo(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "done":
 			out.Values[i] = ec._Todo_done(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "userID":
-			out.Values[i] = ec._Todo_userID(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -3955,6 +3918,24 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	_ = sel
 	_ = ctx
 	res := graphql.MarshalBoolean(*v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOInt2ᚖint32(ctx context.Context, v any) (*int32, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalInt32(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt2ᚖint32(ctx context.Context, sel ast.SelectionSet, v *int32) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	_ = sel
+	_ = ctx
+	res := graphql.MarshalInt32(*v)
 	return res
 }
 

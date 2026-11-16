@@ -6,7 +6,6 @@ type Todo {
   id: String!
   text: String!
   done: Boolean!
-  userID: String!
   dueDateUnixTimestamp: Int!
 }
 
@@ -53,7 +52,7 @@ input NewTodo {
 
 # GetTodoParam defines param for getting todos
 input GetTodoParam{
-  showOnlyFutureTodos: Boolean!
+  futureRange: Int
 }
 
 # NewUser defines the schema for creating user

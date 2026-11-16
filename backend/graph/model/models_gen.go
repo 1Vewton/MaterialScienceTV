@@ -9,7 +9,7 @@ type GetTodoInfo struct {
 }
 
 type GetTodoParam struct {
-	ShowOnlyFutureTodos bool `json:"showOnlyFutureTodos"`
+	FutureRange *int32 `json:"futureRange,omitempty"`
 }
 
 type Info struct {
@@ -56,7 +56,6 @@ type Todo struct {
 	ID                   string `json:"id"`
 	Text                 string `json:"text"`
 	Done                 bool   `json:"done"`
-	UserID               string `json:"userID"`
 	DueDateUnixTimestamp int32  `json:"dueDateUnixTimestamp"`
 }
 
